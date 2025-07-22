@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const TestimonialsCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -109,81 +110,147 @@ const TestimonialsCarousel = () => {
 
         {/* Carousel Container */}
         <div className="relative max-w-4xl mx-auto">
-          {/* Main Testimonial */}
-          <div className="bg-card rounded-2xl p-8 md:p-12 organic-shadow-moderate border border-border">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
-              {/* Avatar and Info */}
-              <div className="flex-shrink-0 text-center md:text-left">
-                <div className="w-20 h-20 mx-auto md:mx-0 mb-4 rounded-full overflow-hidden organic-shadow-subtle">
-                  <Image
-                    src={testimonials[currentIndex].avatar}
-                    alt={`${testimonials[currentIndex].name} avatar`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {testimonials[currentIndex].name}
-                </h3>
-                <p className="text-sm text-primary font-medium">
-                  {testimonials[currentIndex].role}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {testimonials[currentIndex].organization}
-                </p>
-              </div>
-
-              {/* Content */}
-              <div className="flex-1">
-                {/* Quote */}
-                <div className="mb-6">
-                  <Icon name="Quote" size={32} className="text-primary/20 mb-4" />
-                  <p className="text-lg text-foreground leading-relaxed italic">
-                    {testimonials[currentIndex].content}
-                  </p>
-                </div>
-
-                {/* Rating */}
-                <div className="flex items-center space-x-1 mb-4">
-                  {renderStars(testimonials[currentIndex].rating)}
-                </div>
-
-                {/* Project Info */}
-                <div className="bg-surface rounded-lg p-4 border border-border">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Project:</span>
-                      <p className="font-medium text-foreground">
-                        {testimonials[currentIndex].project}
-                      </p>
+          <div className="relative overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div 
+                key={currentIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="bg-card rounded-2xl p-8 md:p-12 organic-shadow-moderate border border-border"
+              >
+                <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+                  {/* Avatar and Info */}
+                  <motion.div 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="flex-shrink-0 text-center md:text-left"
+                  >
+                    <div className="w-20 h-20 mx-auto md:mx-0 mb-4 rounded-full overflow-hidden organic-shadow-subtle">
+                      <Image
+                        src={testimonials[currentIndex].avatar}
+                        alt={`${testimonials[currentIndex].name} avatar`}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Impact:</span>
-                      <p className="font-medium text-primary">
-                        {testimonials[currentIndex].impact}
-                      </p>
+                    <motion.h3 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3, duration: 0.5 }}
+                      className="text-lg font-semibold text-foreground"
+                    >
+                      {testimonials[currentIndex].name}
+                    </motion.h3>
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4, duration: 0.5 }}
+                      className="text-sm text-primary font-medium"
+                    >
+                      {testimonials[currentIndex].role}
+                    </motion.p>
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5, duration: 0.5 }}
+                      className="text-xs text-muted-foreground"
+                    >
+                      {testimonials[currentIndex].organization}
+                    </motion.p>
+                  </motion.div>
+
+                  {/* Content */}
+                  <motion.div 
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className="flex-1"
+                  >
+                    {/* Quote */}
+                    <div className="mb-6">
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                      >
+                        <Icon name="Quote" size={32} className="text-primary/20 mb-4" />
+                      </motion.div>
+                      <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4, duration: 0.5 }}
+                        className="text-lg text-foreground leading-relaxed italic"
+                      >
+                        {testimonials[currentIndex].content}
+                      </motion.p>
                     </div>
-                  </div>
+
+                    {/* Rating */}
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.5, duration: 0.5 }}
+                      className="flex items-center space-x-1 mb-4"
+                    >
+                      {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.5 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.5 + (i * 0.1), duration: 0.3 }}
+                        >
+                          <Icon name="Star" size={16} className="text-amber-400" />
+                        </motion.div>
+                      ))}
+                    </motion.div>
+
+                    {/* Project Info */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6, duration: 0.5 }}
+                      className="bg-surface rounded-lg p-4 border border-border"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Project:</span>
+                          <p className="font-medium text-foreground">{testimonials[currentIndex].project}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Impact:</span>
+                          <p className="font-medium text-primary">{testimonials[currentIndex].impact}</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </motion.div>
                 </div>
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            </AnimatePresence>
 
-          {/* Navigation Arrows */}
-          <button
-            onClick={goToPrevious}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-card rounded-full organic-shadow-subtle border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/20 organic-transition"
-            aria-label="Previous testimonial"
-          >
-            <Icon name="ChevronLeft" size={20} />
-          </button>
+            {/* Navigation Arrows */}
+            <motion.button
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              onClick={goToPrevious}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-card rounded-full organic-shadow-subtle border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/20 organic-transition"
+              aria-label="Previous testimonial"
+            >
+              <Icon name="ChevronLeft" size={20} />
+            </motion.button>
 
-          <button
-            onClick={goToNext}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-card rounded-full organic-shadow-subtle border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/20 organic-transition"
-            aria-label="Next testimonial"
-          >
-            <Icon name="ChevronRight" size={20} />
-          </button>
+            <motion.button
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              onClick={goToNext}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-card rounded-full organic-shadow-subtle border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/20 organic-transition"
+              aria-label="Next testimonial"
+            >
+              <Icon name="ChevronRight" size={20} />
+            </motion.button>
 
           {/* Dots Indicator */}
           <div className="flex justify-center space-x-2 mt-8">
@@ -206,6 +273,7 @@ const TestimonialsCarousel = () => {
             <span>{isAutoPlaying ? "Auto-playing" : "Paused"}</span>
           </div>
         </div>
+      </div>
       </div>
     </section>
   );

@@ -78,11 +78,15 @@ const FeatureCards = () => {
             const colors = getColorClasses(feature.color);
             
             return (
-              <Link
+              <div 
                 key={feature.id}
-                to={feature.link}
-                className="group relative bg-card rounded-2xl p-8 organic-shadow-subtle hover:organic-shadow-moderate organic-transition border border-border hover:border-primary/20"
+                className="feature-card-animation"
+                style={{ animationDelay: `${0.2 + (index * 0.15)}s` }}
               >
+                <Link
+                  to={feature.link}
+                  className="group relative bg-card rounded-2xl p-8 organic-shadow-subtle hover:organic-shadow-moderate organic-transition border border-border hover:border-primary/20 block"
+                >
                 {/* Step Number */}
                 <div className="absolute -top-4 left-8">
                   <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold">
@@ -118,7 +122,8 @@ const FeatureCards = () => {
                     </div>
                   </div>
                 )}
-              </Link>
+                </Link>
+              </div>
             );
           })}
         </div>

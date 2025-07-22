@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
+import AnimatedCounter from '../../../components/ui/AnimatedCounter';
+import AnimatedList from '../../../components/ui/AnimatedList';
 
 const ImpactMetrics = () => {
   const [counters, setCounters] = useState({
@@ -24,7 +26,7 @@ const ImpactMetrics = () => {
       value: counters.carbonOffset,
       unit: 'tons CO₂',
       color: 'primary',
-      description: 'Total carbon dioxide offset through verified projects'
+      description: 'Total CO₂ offset via verified projects'
     },
     {
       id: 'activeProjects',
@@ -133,14 +135,14 @@ const ImpactMetrics = () => {
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {metrics.map((metric) => {
+        <AnimatedList animation="scale" delay={0.2} staggerDelay={0.1} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {metrics.map(metric => {
             const colors = getColorClasses(metric.color);
             
             return (
-              <div
-                key={metric.id}
-                className={`bg-card rounded-2xl p-6 organic-shadow-subtle hover:organic-shadow-moderate organic-transition border ${colors.border} group`}
+              <div 
+                key={metric.id} 
+                className={`p-6 rounded-xl border ${colors.border} ${colors.bg} organic-shadow-subtle`}
               >
                 {/* Icon */}
                 <div className={`w-12 h-12 ${colors.bg} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 organic-transition`}>
@@ -150,7 +152,11 @@ const ImpactMetrics = () => {
                 {/* Value */}
                 <div className="mb-2">
                   <div className="text-2xl md:text-3xl font-bold text-foreground">
-                    {formatNumber(metric.value)}
+                    <AnimatedCounter 
+                      value={targetValues[metric.id]} 
+                      duration={2.5} 
+                      separator={true}
+                    />
                   </div>
                   <div className="text-sm text-muted-foreground font-medium">
                     {metric.unit}
@@ -179,7 +185,7 @@ const ImpactMetrics = () => {
               </div>
             );
           })}
-        </div>
+        </AnimatedList>
 
         {/* Additional Info */}
         <div className="text-center mt-12">
