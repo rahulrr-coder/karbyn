@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "karbyn_backend": {
+      "candid": "src/karbyn_backend/karbyn_backend.did",
+      "package": "karbyn_backend",
+      "type": "rust"
+    },
+    "karbyn_frontend": {
+      "dependencies": [
+        "karbyn_backend"
+      ],
+      "source": [
+        "src/karbyn_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "karbyn_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
