@@ -21,6 +21,8 @@ const Header = () => {
     { label: 'Activities', path: '/activities/submit', icon: 'Plus' },
     { label: 'Marketplace', path: '/marketplace', icon: 'ShoppingBag' },
     { label: 'My NFTs', path: '/marketplace/my-nfts', icon: 'Award' },
+    { label: 'Community', path: '/community', icon: 'Users' },
+    { label: 'Business', path: '/business/partnership', icon: 'Building2' },
     { label: 'Submit Project', path: '/submit-project', icon: 'TreePine', isAction: true }
   ];
 
