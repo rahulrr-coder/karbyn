@@ -11,12 +11,10 @@ const ProjectCard = ({ project, viewMode = 'grid' }) => {
     navigate('/project-details', { state: { project } });
   };
 
-  const handleVerifyProject = () => {
-    // Mock verification action
-    console.log('Verifying project:', project.id);
-  };
-
-  const handleShare = () => {
+  const handleVerify = () => {
+    // TODO: Implement project verification logic
+    onVerify?.(project);
+  };  const handleShare = () => {
     // Mock share action
     navigator.clipboard.writeText(`Check out this climate project: ${project.title}`);
   };

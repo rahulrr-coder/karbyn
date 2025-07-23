@@ -15,7 +15,6 @@ class BiometricService {
       };
       
       localStorage.setItem(this.storageKey, JSON.stringify(profiles));
-      console.log('Biometric profile saved successfully for wallet:', biometricData.walletAddress);
       return true;
     } catch (error) {
       console.error('Error saving biometric profile:', error);
@@ -248,7 +247,6 @@ class BiometricService {
         localStorage.removeItem(historyKey);
       });
       
-      console.log('All biometric data cleared successfully');
       return true;
     } catch (error) {
       console.error('Error clearing biometric data:', error);

@@ -10,8 +10,7 @@ const ProjectVerification = ({ project }) => {
   const [showVoteForm, setShowVoteForm] = useState(false);
 
   const handleVoteSubmit = () => {
-    // Mock vote submission
-    console.log('Vote submitted:', { vote: userVote, comment });
+    // Mock vote submission - TODO: Replace with actual canister call
     setShowVoteForm(false);
     setComment('');
   };

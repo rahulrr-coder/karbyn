@@ -200,7 +200,7 @@ export const ActivityProvider = ({ children }) => {
     try {
       // TODO: Replace with actual NFT canister call
       // await nftCanister.generateMicroCarbonNFT(activityId);
-      console.log(`Generated Micro-Carbon NFT for activity ${activityId}`);
+      // Generated Micro-Carbon NFT for activity
     } catch (error) {
       console.error('Error generating NFT:', error);
     }

@@ -1,3 +1,78 @@
+type PublicUserProfile = record {
+  id : principal;
+  nfts_earned : nat32;
+  name : text;
+  role : UserRole;
+  total_activities : nat32;
+  verification_status : text;
+  is_active : bool;
+  location : opt text;
+  total_carbon_offset : float64;
+};
+type RegisterUserInput = record {
+  bio : opt text;
+  name : text;
+  role : text;
+  device_id : opt text;
+  location : opt text;
+};
+type Result = variant { Ok; Err : UserError };
+type Result_1 = variant { Ok : User; Err : UserError };
+type UpdateProfileInput = record {
+  bio : opt text;
+  biometric_enabled : opt bool;
+  name : opt text;
+  device_id : opt text;
+  location : opt text;
+};
+type User = record {
+  id : principal;
+  bio : opt text;
+  biometric_enabled : bool;
+  nfts_earned : nat32;
+  name : text;
+  role : UserRole;
+  device_id : opt text;
+  total_activities : nat32;
+  verification_status : text;
+  last_activity : opt nat64;
+  registered_at : nat64;
+  location : opt text;
+  total_carbon_offset : float64;
+};
+type UserError = variant {
+  UserAlreadyExists;
+  BioTooLong;
+  InvalidInput : text;
+  Unauthorized;
+  InvalidRole : text;
+  NameTooLong;
+  UserNotFound;
+  LocationTooLong;
+};
+type UserRole = variant { NGO; Farmer; Individual };
+type UserStats = record {
+  biometric_enabled_users : nat32;
+  total_users : nat32;
+  farmers : nat32;
+  ngos : nat32;
+  individuals : nat32;
+  active_users : nat32;
+  verified_users : nat32;
+};
 service : {
-    "greet": (text) -> (text) query;
+  authenticate_user : (text) -> (opt User) query;
+  disable_biometric_auth : () -> (Result);
+  enable_biometric_auth : (text) -> (Result);
+  get_active_users_count : () -> (nat32) query;
+  get_all_users : () -> (vec PublicUserProfile) query;
+  get_current_user : () -> (opt User) query;
+  get_public_user_profile : (principal) -> (opt PublicUserProfile) query;
+  get_user : (principal) -> (opt User) query;
+  get_user_stats : () -> (UserStats) query;
+  list_users_by_role : (text) -> (vec PublicUserProfile) query;
+  register_user : (RegisterUserInput) -> (Result_1);
+  update_profile : (UpdateProfileInput) -> (Result);
+  update_user_stats : (principal, float64, nat32, nat32) -> (Result);
+  user_exists : (principal) -> (bool) query;
 }

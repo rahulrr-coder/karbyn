@@ -62,8 +62,9 @@ const ProjectComments = ({ project }) => {
   const handleSubmitComment = () => {
     if (newComment.trim()) {
       // Mock comment submission
-      console.log('New comment:', newComment);
-      setNewComment('');
+      // TODO: Save comment to canister
+      setComments([...comments, newComment]);
+      setComment('');
       alert('Comment submitted successfully!');
     }
   };
