@@ -12,6 +12,7 @@ import ProjectDetails from "./pages/project-details";
 import NotFound from "./pages/NotFound";
 // New pages
 import Login from "./pages/auth/Login";
+import SignupWithBiometric from "./components/auth/SignupWithBiometric";
 import Dashboard from "./pages/Dashboard";
 import Marketplace from "./pages/marketplace/Marketplace";
 import MyNFTs from "./pages/marketplace/MyNFTs";
@@ -37,6 +38,7 @@ const Routes = () => {
         
         {/* Authentication */}
         <Route path="/auth/login" element={<Login />} />
+        <Route path="/auth/signup" element={<SignupWithBiometric />} />
         <Route path="/dashboard" element={<Dashboard />} />
         
         {/* Activities */}

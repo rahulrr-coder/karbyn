@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useActivity } from '../../contexts/ActivityContext';
-import AIVerificationInterface from '../../components/verification/AIVerificationInterface';
+import EnhancedAIVerification from '../../components/verification/EnhancedAIVerification';
+import biometricService from '../../services/biometricService';
 import ActivityShare from '../../components/social/ActivityShare';
 import ImpactCertificate from '../../components/social/ImpactCertificate';
 
 const SubmitActivity = () => {
   const { submitActivity, activityTypes, loading } = useActivity();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  
+  // Get user's biometric profile
+  const userBiometric = user?.walletAddress ? biometricService.getBiometricProfile(user.walletAddress) : null;
   
   const [formData, setFormData] = useState({
     type: 'transport',
@@ -432,12 +436,18 @@ const SubmitActivity = () => {
               </button>
             </div>
             
-            <AIVerificationInterface 
+            <EnhancedAIVerification 
+              userBiometric={userBiometric}
               onVerificationComplete={(result) => {
+                // Save verification result to history
+                if (user?.walletAddress) {
+                  biometricService.saveVerificationResult(user.walletAddress, result);
+                }
                 setAiVerificationResult(result);
                 setStep(3);
               }}
-              proofFiles={formData.proofFiles}
+              activityType={formData.type}
+              preferLiveVerification={true}
             />
           </div>
         )}
@@ -603,18 +613,26 @@ const SubmitActivity = () => {
                     <div className="ml-4 flex-grow">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium text-foreground">AI Verification Complete</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${aiVerificationResult.success ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                          {aiVerificationResult.success ? 'Verified' : 'Failed'}
+                        <span className={`text-xs px-2 py-1 rounded-full ${aiVerificationResult.isMatch ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                          {aiVerificationResult.isMatch ? 'Identity Verified' : 'Identity Mismatch'}
                         </span>
                       </div>
                       <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
                         <div>
-                          <span className="text-muted-foreground">Liveness Score:</span>
-                          <span className="ml-1 font-medium">{aiVerificationResult.livenessScore}%</span>
+                          <span className="text-muted-foreground">Face Match:</span>
+                          <span className="ml-1 font-medium">{aiVerificationResult.similarity?.toFixed(1)}%</span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Expression Check:</span>
-                          <span className="ml-1 font-medium">{aiVerificationResult.expressionVerified ? 'Passed' : 'Failed'}</span>
+                          <span className="text-muted-foreground">Confidence:</span>
+                          <span className="ml-1 font-medium">{aiVerificationResult.confidence?.toFixed(1)}%</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Method:</span>
+                          <span className="ml-1 font-medium">{aiVerificationResult.verificationType === 'live_video' ? 'Live Video' : 'Upload'}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Expression:</span>
+                          <span className="ml-1 font-medium capitalize">{aiVerificationResult.dominantExpression}</span>
                         </div>
                       </div>
                     </div>
