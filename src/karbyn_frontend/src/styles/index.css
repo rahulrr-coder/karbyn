@@ -1,12 +1,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwind.css";
+@import "animations.css";
 
 body {
   margin: 0;
   padding: 0;
 }
-
-@import "tailwind.css";
-@import "animations.css";
 
 * {
   box-sizing: border-box;
