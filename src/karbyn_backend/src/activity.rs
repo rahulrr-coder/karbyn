@@ -24,7 +24,7 @@ thread_local! {
         )
     );
     
-    static ACTIVITY_COUNTER: RefCell<u64> = RefCell::new(1);
+    static ACTIVITY_COUNTER: RefCell<u64> = const { RefCell::new(1) };
 }
 
 /// Submit a new environmental activity
@@ -37,7 +37,7 @@ pub fn submit_activity(input: SubmitActivityInput) -> Result<Activity, ActivityE
     }
     
     // Parse and validate activity type
-    let activity_type = ActivityType::from_str(&input.activity_type)?;
+    let activity_type = input.activity_type.parse::<ActivityType>()?;
     
     // Validate quantity
     if input.quantity <= 0.0 {
@@ -198,7 +198,7 @@ pub fn get_user_activity_stats() -> UserActivityStats {
         stats.activities_by_type = type_counts
             .into_iter()
             .filter_map(|(type_str, count)| {
-                ActivityType::from_str(&type_str)
+                type_str.parse::<ActivityType>()
                     .ok()
                     .map(|activity_type| (activity_type, count))
             })
@@ -233,13 +233,19 @@ pub fn verify_activity(activity_id: u64, verification_score: u8) -> Result<(), A
             
             activity.update_verification(status.clone(), verification_score);
             
-            // If verified, update user's carbon offset
+            // If verified, update user's carbon offset and award tokens
             if status == ActivityVerificationStatus::Verified {
                 let _ = user::update_user_stats(
                     activity.user_principal,
                     activity.calculated_carbon_offset,
                     0, // No additional activity count (already counted on submission)
                     if activity.is_nft_eligible() { 1 } else { 0 },
+                );
+                
+                // Award KCT tokens based on carbon offset
+                let _ = crate::token::award_tokens_for_activity(
+                    activity.user_principal,
+                    activity.calculated_carbon_offset
                 );
                 
                 // Mark NFT as generated if eligible
@@ -348,7 +354,7 @@ pub fn get_recent_global_activities(limit: u32) -> Vec<ActivityHistoryItem> {
 
 /// Get activities by type (for analytics)
 pub fn get_activities_by_type(activity_type: String) -> Result<Vec<ActivityHistoryItem>, ActivityError> {
-    let target_type = ActivityType::from_str(&activity_type)?;
+    let target_type = activity_type.parse::<ActivityType>()?;
     
     ACTIVITY_STORE.with(|store| {
         let store_ref = store.borrow();

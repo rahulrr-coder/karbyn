@@ -37,18 +37,6 @@ impl ActivityType {
         }
     }
 
-    /// Parse activity type from string
-    pub fn from_str(s: &str) -> Result<Self, ActivityError> {
-        match s {
-            "PlantTree" => Ok(ActivityType::PlantTree),
-            "RecycleWaste" => Ok(ActivityType::RecycleWaste),
-            "UsePublicTransport" => Ok(ActivityType::UsePublicTransport),
-            "UseRenewableEnergy" => Ok(ActivityType::UseRenewableEnergy),
-            "ReduceConsumption" => Ok(ActivityType::ReduceConsumption),
-            _ => Err(ActivityError::InvalidActivityType(s.to_string())),
-        }
-    }
-
     /// Get validation rules for this activity type
     pub fn validation_rules(&self) -> ActivityValidationRules {
         match self {
@@ -92,6 +80,22 @@ impl ActivityType {
                 max_quantity: 100.0,
                 unit_name: "actions".to_string(),
             },
+        }
+    }
+}
+
+/// Implement standard FromStr trait for ActivityType
+impl std::str::FromStr for ActivityType {
+    type Err = ActivityError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "PlantTree" => Ok(ActivityType::PlantTree),
+            "RecycleWaste" => Ok(ActivityType::RecycleWaste),
+            "UsePublicTransport" => Ok(ActivityType::UsePublicTransport),
+            "UseRenewableEnergy" => Ok(ActivityType::UseRenewableEnergy),
+            "ReduceConsumption" => Ok(ActivityType::ReduceConsumption),
+            _ => Err(ActivityError::InvalidActivityType(s.to_string())),
         }
     }
 }
@@ -236,15 +240,14 @@ impl Activity {
         }
 
         // Validate quantity
-        if rules.requires_quantity {
-            if self.quantity < rules.min_quantity || self.quantity > rules.max_quantity {
+        if rules.requires_quantity
+            && (self.quantity < rules.min_quantity || self.quantity > rules.max_quantity) {
                 return Err(ActivityError::QuantityOutOfRange(
                     self.quantity,
                     rules.min_quantity,
                     rules.max_quantity,
                 ));
             }
-        }
 
         // Validate proof requirement
         if rules.requires_proof && self.proof_url.is_none() {
@@ -286,6 +289,12 @@ impl Activity {
         if status == ActivityVerificationStatus::Verified {
             self.verified_at = Some(time());
         }
+    }
+}
+
+impl Default for UserActivityStats {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -361,8 +370,7 @@ impl CarbonCalculator {
 
         if calculated_offset < expected_min || calculated_offset > expected_max {
             return Err(ActivityError::CalculationError(format!(
-                "Carbon offset calculation out of expected range: {} (expected: {}-{})",
-                calculated_offset, expected_min, expected_max
+                "Carbon offset calculation out of expected range: {calculated_offset} (expected: {expected_min}-{expected_max})"
             )));
         }
 

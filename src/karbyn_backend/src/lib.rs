@@ -6,6 +6,9 @@ mod models;
 mod user;
 mod activity_models;
 mod activity;
+mod token_models;
+mod token;
+mod nft;
 
 // Re-export types for external use
 pub use models::{
@@ -16,6 +19,12 @@ pub use models::{
 pub use activity_models::{
     Activity, ActivityType, ActivityError, ActivityVerificationStatus,
     SubmitActivityInput, UserActivityStats, ActivityHistoryItem
+};
+
+pub use token_models::{
+    TokenBalance, CarbonNFT, MarketplaceListing, NFTTransaction, TokenError,
+    ActivitySummary, UserPortfolio, LeaderboardEntry, ListNFTInput, BuyNFTInput,
+    MarketplaceFilter, MarketplaceStats
 };
 
 // === EXPORTED CANISTER FUNCTIONS ===
@@ -175,6 +184,156 @@ pub fn delete_activity(activity_id: u64) -> Result<(), ActivityError> {
 #[query]
 pub fn get_activity_types() -> Vec<(String, f64, String)> {
     activity::get_activity_types()
+}
+
+// === TOKEN MANAGEMENT FUNCTIONS ===
+
+/// Get current user's token balance
+#[query]
+pub fn get_token_balance() -> TokenBalance {
+    token::get_token_balance()
+}
+
+/// Get any user's token balance (public)
+#[query]
+pub fn get_user_token_balance(principal: Principal) -> TokenBalance {
+    token::get_user_token_balance(principal)
+}
+
+/// Check if current user can mint an NFT
+#[query]
+pub fn can_mint_nft() -> bool {
+    token::can_mint_nft()
+}
+
+/// Get current user's complete portfolio
+#[query]
+pub fn get_user_portfolio() -> UserPortfolio {
+    token::get_user_portfolio()
+}
+
+/// Get any user's portfolio (public)
+#[query]
+pub fn get_user_portfolio_by_principal(principal: Principal) -> UserPortfolio {
+    token::get_user_portfolio_by_principal(principal)
+}
+
+/// Get leaderboard of top users
+#[query]
+pub fn get_leaderboard(limit: u32) -> Vec<LeaderboardEntry> {
+    token::get_leaderboard(limit)
+}
+
+/// Get global token statistics
+#[query]
+pub fn get_token_stats() -> (u64, u64, u32, f64) {
+    token::get_token_stats()
+}
+
+/// Get token distribution statistics
+#[query]
+pub fn get_token_distribution() -> Vec<(String, u32)> {
+    token::get_token_distribution()
+}
+
+/// Get daily token earnings
+#[query]
+pub fn get_daily_token_earnings() -> Vec<(String, u64)> {
+    token::get_daily_token_earnings()
+}
+
+// === NFT MANAGEMENT FUNCTIONS ===
+
+/// Mint a new Carbon Credit NFT (requires 1000 KCT)
+#[update]
+pub fn mint_nft() -> Result<CarbonNFT, TokenError> {
+    nft::mint_nft()
+}
+
+/// Get current user's NFTs
+#[query]
+pub fn get_my_nfts() -> Vec<CarbonNFT> {
+    nft::get_my_nfts()
+}
+
+/// Get any user's NFTs (public)
+#[query]
+pub fn get_user_nfts(user_principal: Principal) -> Vec<CarbonNFT> {
+    nft::get_user_nfts(user_principal)
+}
+
+/// Get NFT by ID
+#[query]
+pub fn get_nft(nft_id: u64) -> Option<CarbonNFT> {
+    nft::get_nft(nft_id)
+}
+
+/// Get NFT ownership history
+#[query]
+pub fn get_nft_ownership_history(nft_id: u64) -> Vec<NFTTransaction> {
+    nft::get_nft_ownership_history(nft_id)
+}
+
+/// Get global NFT statistics
+#[query]
+pub fn get_global_nft_stats() -> (u32, u32, u32, f64) {
+    nft::get_global_nft_stats()
+}
+
+// === MARKETPLACE FUNCTIONS ===
+
+/// List NFT for sale on marketplace
+#[update]
+pub fn list_nft(input: ListNFTInput) -> Result<MarketplaceListing, TokenError> {
+    nft::list_nft(input)
+}
+
+/// Buy NFT from marketplace
+#[update]
+pub fn buy_nft(input: BuyNFTInput) -> Result<NFTTransaction, TokenError> {
+    nft::buy_nft(input)
+}
+
+/// Cancel NFT listing
+#[update]
+pub fn cancel_listing(listing_id: u64) -> Result<(), TokenError> {
+    nft::cancel_listing(listing_id)
+}
+
+/// Get marketplace listings with filters
+#[query]
+pub fn get_marketplace_listings(filter: Option<MarketplaceFilter>) -> Vec<MarketplaceListing> {
+    nft::get_marketplace_listings(filter)
+}
+
+/// Get current user's marketplace listings
+#[query]
+pub fn get_my_listings() -> Vec<MarketplaceListing> {
+    nft::get_my_listings()
+}
+
+/// Get marketplace statistics
+#[query]
+pub fn get_marketplace_stats() -> MarketplaceStats {
+    nft::get_marketplace_stats()
+}
+
+/// Get recent marketplace transactions
+#[query]
+pub fn get_recent_transactions(limit: u32) -> Vec<NFTTransaction> {
+    nft::get_recent_transactions(limit)
+}
+
+/// Get current user's transaction history
+#[query]
+pub fn get_my_transactions() -> Vec<NFTTransaction> {
+    nft::get_my_transactions()
+}
+
+/// Get any user's transaction history (public)
+#[query]
+pub fn get_user_transactions(user_principal: Principal) -> Vec<NFTTransaction> {
+    nft::get_user_transactions(user_principal)
 }
 
 // === CANISTER LIFECYCLE ===

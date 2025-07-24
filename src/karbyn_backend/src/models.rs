@@ -102,8 +102,8 @@ impl std::fmt::Display for UserError {
         match self {
             UserError::UserAlreadyExists => write!(f, "User already exists"),
             UserError::UserNotFound => write!(f, "User not found"),
-            UserError::InvalidRole(role) => write!(f, "Invalid role: {}", role),
-            UserError::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
+            UserError::InvalidRole(role) => write!(f, "Invalid role: {role}"),
+            UserError::InvalidInput(msg) => write!(f, "Invalid input: {msg}"),
             UserError::Unauthorized => write!(f, "Unauthorized access"),
             UserError::NameTooLong => write!(f, "Name too long (max 100 characters)"),
             UserError::BioTooLong => write!(f, "Bio too long (max 500 characters)"),
