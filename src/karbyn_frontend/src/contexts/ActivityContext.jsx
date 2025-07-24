@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { karbyn_backend } from '../../../declarations/karbyn_backend';
 
 const ActivityContext = createContext();
 
@@ -12,7 +13,7 @@ export const useActivity = () => {
 };
 
 export const ActivityProvider = ({ children }) => {
-  const { isAuthenticated, principal } = useAuth();
+  const { isAuthenticated, principal, backend } = useAuth();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
@@ -58,40 +59,46 @@ export const ActivityProvider = ({ children }) => {
   const loadUserActivities = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual canister call
-      // const userActivities = await activityCanister.getUserActivities(principal);
-      
-      // Mock data for development
-      const mockActivities = [
-        {
-          id: '1',
-          type: 'transport',
-          subtype: 'public_transit',
-          description: 'Bus ride from downtown to university',
-          distance: 5.2,
-          carbonOffset: 2.1,
-          date: '2024-01-15T08:30:00Z',
-          verified: true,
-          nftGenerated: true,
-          location: 'Downtown → University'
-        },
-        {
-          id: '2',
-          type: 'recycling',
-          subtype: 'plastic_bottles',
-          description: '15 plastic bottles recycled',
-          quantity: 15,
-          carbonOffset: 0.75,
-          date: '2024-01-14T14:20:00Z',
-          verified: true,
-          nftGenerated: false,
-          location: 'Home'
+      if (backend && principal) {
+        // Try to get activities from backend (for now, use mock data as backend may not have this function yet)
+        try {
+          // const userActivities = await backend.get_user_activities();
+          // For now, use mock data but structure it to match what we expect from backend
+          const mockActivities = [
+            {
+              id: '1',
+              type: 'transport',
+              subtype: 'public_transit',
+              description: 'Bus ride from downtown to university',
+              distance: 5.2,
+              carbonOffset: 2.1,
+              date: '2024-01-15T08:30:00Z',
+              verified: true,
+              nftGenerated: true,
+              location: 'Downtown → University'
+            },
+            {
+              id: '2',
+              type: 'recycling',
+              subtype: 'plastic_bottles',
+              description: '15 plastic bottles recycled',
+              quantity: 15,
+              carbonOffset: 0.75,
+              date: '2024-01-14T14:20:00Z',
+              verified: true,
+              nftGenerated: false,
+              location: 'Home'
+            }
+          ];
+          setActivities(mockActivities);
+        } catch (backendError) {
+          console.log('Backend activity functions not yet implemented, using mock data');
+          setActivities([]);
         }
-      ];
-      
-      setActivities(mockActivities);
+      }
     } catch (error) {
       console.error('Error loading activities:', error);
+      setActivities([]);
     } finally {
       setLoading(false);
     }

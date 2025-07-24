@@ -12,7 +12,7 @@ export const useNFT = () => {
 };
 
 export const NFTProvider = ({ children }) => {
-  const { isAuthenticated, identity } = useAuth();
+  const { isAuthenticated, principal, backend } = useAuth();
   const [userNFTs, setUserNFTs] = useState([]);
   const [marketplaceNFTs, setMarketplaceNFTs] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -71,12 +71,21 @@ export const NFTProvider = ({ children }) => {
   const loadUserNFTs = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual canister call
-      // const userNFTs = await nftCanister.getUserNFTs(principal);
-      const userNFTs = mockNFTs.filter(nft => nft.owner === 'user123');
-      setUserNFTs(userNFTs);
+      if (backend && principal) {
+        try {
+          // Try to get NFTs from backend (for now, use mock data as backend may not have this function yet)
+          // const nfts = await backend.get_my_nfts();
+          // For now, use mock data but structure it to match what we expect from backend
+          const mockUserNFTs = mockNFTs.filter(nft => nft.owner === 'user123').slice(0, 3);
+          setUserNFTs(mockUserNFTs);
+        } catch (backendError) {
+          console.log('Backend NFT functions not yet implemented, using mock data');
+          setUserNFTs([]);
+        }
+      }
     } catch (error) {
       console.error('Error loading user NFTs:', error);
+      setUserNFTs([]);
     } finally {
       setLoading(false);
     }
@@ -85,11 +94,20 @@ export const NFTProvider = ({ children }) => {
   const loadMarketplaceNFTs = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual canister call
-      // const marketplaceNFTs = await nftCanister.getMarketplaceNFTs();
-      setMarketplaceNFTs(mockNFTs);
+      if (backend) {
+        try {
+          // Try to get marketplace NFTs from backend
+          // const marketplaceNFTs = await backend.get_marketplace_nfts();
+          // For now, use mock data
+          setMarketplaceNFTs(mockNFTs);
+        } catch (backendError) {
+          console.log('Backend marketplace functions not yet implemented, using mock data');
+          setMarketplaceNFTs(mockNFTs);
+        }
+      }
     } catch (error) {
       console.error('Error loading marketplace NFTs:', error);
+      setMarketplaceNFTs([]);
     } finally {
       setLoading(false);
     }

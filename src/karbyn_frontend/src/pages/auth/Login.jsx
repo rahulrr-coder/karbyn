@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 
 const Login = () => {
-  const { login, isAuthenticated, loading } = useAuth();
+  const { login, demoLogin, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,6 +15,10 @@ const Login = () => {
 
   const handleLogin = async () => {
     await login();
+  };
+
+  const handleDemoLogin = async () => {
+    await demoLogin();
   };
 
   return (
@@ -60,6 +64,24 @@ const Login = () => {
                     Sign In with Internet Identity
                   </>
                 )}
+              </button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">For Development</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleDemoLogin}
+                disabled={loading}
+                className="w-full flex justify-center py-3 px-4 border border-accent rounded-md shadow-sm text-sm font-medium text-accent-foreground bg-accent hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed organic-transition"
+              >
+                <span className="mr-2">🧪</span>
+                Demo Login (Development)
               </button>
               
               <div className="relative">
