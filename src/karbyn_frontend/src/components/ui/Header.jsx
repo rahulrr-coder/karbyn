@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/MultiWalletAuthContext';
 import Icon from '../AppIcon';
 
 const Header = () => {
@@ -111,23 +111,13 @@ const Header = () => {
                     </button>
                   </div>
                 ) : (
-                  <button
-                    onClick={login}
-                    disabled={loading}
+                  <Link
+                    to="/auth/login"
                     className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 organic-transition disabled:opacity-50"
                   >
-                    {loading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                        <span>Connecting...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="LogIn" size={16} />
-                        <span>Sign In</span>
-                      </>
-                    )}
-                  </button>
+                    <Icon name="LogIn" size={16} />
+                    <span>Sign In</span>
+                  </Link>
                 )}
               </div>
             </div>
@@ -188,6 +178,38 @@ const Header = () => {
                       <span>{item.label}</span>
                     </Link>
                   ))}
+                </div>
+
+                {/* Mobile Authentication */}
+                <div className="mt-6 pt-6 border-t border-border">
+                  {isAuthenticated ? (
+                    <div className="space-y-2">
+                      <div className="px-4 py-2">
+                        <span className="text-sm text-muted-foreground">
+                          {principal?.slice(0, 8)}...{principal?.slice(-6)}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          logout();
+                          closeMobileMenu();
+                        }}
+                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium text-muted-foreground hover:text-foreground hover:bg-muted organic-transition"
+                      >
+                        <Icon name="LogOut" size={20} />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <Link
+                      to="/auth/login"
+                      onClick={closeMobileMenu}
+                      className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 organic-transition"
+                    >
+                      <Icon name="LogIn" size={20} />
+                      <span>Sign In</span>
+                    </Link>
+                  )}
                 </div>
               </nav>
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
+import { useAuth } from './MultiWalletAuthContext';
 import { karbyn_backend } from '../../../declarations/karbyn_backend';
 
 const ActivityContext = createContext();

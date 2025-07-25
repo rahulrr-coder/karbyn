@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/MultiWalletAuthContext';
 import ShareButtons from './ShareButtons';
 
 /**

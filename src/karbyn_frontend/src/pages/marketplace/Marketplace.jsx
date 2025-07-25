@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNFT } from '../../contexts/NFTContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/MultiWalletAuthContext';
 import { Link } from 'react-router-dom';
 
 const Marketplace = () => {

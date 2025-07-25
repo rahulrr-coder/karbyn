@@ -1,383 +1,485 @@
-// Karbyn Backend Integration Service
-// This service provides a clean interface between your React frontend and the IC backend
-
 /**
- * SETUP INSTRUCTIONS:
+ * Karbyn Backend Service - Real Canister Integration
  * 
- * 1. Generate Candid declarations:
- *    Run `dfx generate` in your project root to generate type declarations
- * 
- * 2. Replace the temporary backend reference below with:
- *    import { karbyn_backend } from '../declarations/karbyn_backend';
- * 
- * 3. Import proper types:
- *    import type { 
- *      User, 
- *      UserRole, 
- *      RegisterUserInput, 
- *      UpdateProfileInput 
- *    } from '../declarations/karbyn_backend/karbyn_backend.did';
- * 
- * 4. Remove the temporary type definitions and backend mock below
+ * This service connects to the actual deployed backend canister
+ * and provides all the functionality for the Karbyn dApp
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { Principal } from '@dfinity/principal';
+import { createActor, karbyn_backend } from '../../../declarations/karbyn_backend';
 
-// Backend import - Update path as needed based on your project structure
-// For now using placeholder, update when declarations are generated
-declare global {
-  interface Window {
-    karbyn_backend: any;
-  }
-}
+// Import types from the generated declarations
+import type {
+  User,
+  UserRole, 
+  RegisterUserInput,
+  UpdateProfileInput,
+  UserStats,
+  PublicUserProfile,
+  Activity,
+  ActivityType,
+  SubmitActivityInput,
+  ActivityHistoryItem,
+  UserActivityStats,
+  ActivityVerificationStatus,
+  TokenBalance,
+  UserPortfolio,
+  LeaderboardEntry,
+  CarbonNFT,
+  ActivitySummary,
+  MarketplaceListing,
+  NFTTransaction,
+  ListNFTInput,
+  BuyNFTInput,
+  MarketplaceFilter,
+  MarketplaceStats,
+  Result_7,  // Result<User, UserError>
+  Result_3,  // Result<null, UserError>  
+  Result_8,  // Result<Activity, ActivityError>
+  Result_6,  // Result<CarbonNFT, TokenError>
+  Result_5,  // Result<MarketplaceListing, TokenError>
+  Result,    // Result<NFTTransaction, TokenError>
+  Result_1,  // Result<null, TokenError>
+  UserError,
+  ActivityError,
+  TokenError
+} from '../../../declarations/karbyn_backend/karbyn_backend.did.d.ts';
 
-// Temporary backend reference - replace with proper import
-const karbyn_backend = (window as any).karbyn_backend || {
-  register_user: async (input: any) => ({ Ok: {} }),
-  get_current_user: async () => [],
-  authenticate_user: async (deviceId: string) => [],
-  update_profile: async (input: any) => ({ Ok: {} }),
-  list_users_by_role: async (role: string) => [],
-  get_user_stats: async () => [],
-  get_all_users: async () => [],
-  get_user: async (principalId: string) => [],
-  update_user_stats: async (...args: any[]) => ({ Ok: {} })
-};
-
-// Temporary type definitions - replace with generated types
-export interface User {
-  id: string; // Principal
-  name: string;
-  role: UserRole;
-  bio?: string;
-  registered_at: bigint;
-  device_id?: string;
-  total_carbon_offset: number;
-  total_activities: number;
-  nfts_earned: number;
-  verification_status: string;
-}
-
-export interface UserRole {
-  Individual?: null;
-  Farmer?: null;
-  NGO?: null;
-}
-
-export interface RegisterUserInput {
-  name: string;
-  role: string;
-  bio: string[];
-  device_id: string[];
-}
-
-export interface UpdateProfileInput {
-  bio: string[];
-  device_id: string[];
-}
-
-export interface UserRegistrationData {
-  name: string;
-  role: 'Individual' | 'Farmer' | 'NGO';
-  bio?: string;
-  deviceId?: string;
-}
-
-export interface UserProfileUpdate {
-  bio?: string;
-  deviceId?: string;
-}
-
-export interface CommunityStats {
-  individuals: number;
-  farmers: number;
-  ngos: number;
-  total: number;
-}
-
-// Backend response types
-export interface BackendResult<T> {
-  Ok?: T;
-  Err?: string;
-}
-
-// Type for user stats from backend
-export type UserStatsResponse = [string, number][];
-
+/**
+ * Real Karbyn Backend Service
+ * Connects to the deployed canister instead of using mock data
+ */
 export class KarbynBackendService {
-  
+  private static backend: any = null;
+
+  /**
+   * Initialize the backend connection with authentication
+   */
+  static async initialize(identity?: any) {
+    try {
+      if (identity) {
+        // Create authenticated actor with the provided identity
+        this.backend = createActor(process.env.CANISTER_ID_KARBYN_BACKEND!, {
+          agentOptions: {
+            identity,
+            host: process.env.DFX_NETWORK === 'ic' ? 'https://ic0.app' : 'http://localhost:4943',
+          },
+        });
+      } else {
+        // Use default actor (anonymous)
+        this.backend = karbyn_backend;
+      }
+      
+      console.log('Backend service initialized with real canister');
+      return this.backend;
+    } catch (error) {
+      console.error('Failed to initialize backend service:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get the current backend instance
+   */
+  static getBackend() {
+    if (!this.backend) {
+      throw new Error('Backend service not initialized. Call initialize() first.');
+    }
+    return this.backend;
+  }
+
+  // ==================== USER MANAGEMENT FUNCTIONS ====================
+
   /**
    * Register a new user in the system
    */
-  static async registerUser(userData: UserRegistrationData): Promise<User> {
-    try {
-      const input: RegisterUserInput = {
-        name: userData.name,
-        role: userData.role,
-        bio: userData.bio ? [userData.bio] : [],
-        device_id: userData.deviceId ? [userData.deviceId] : []
-      };
-
-      const result: BackendResult<User> = await karbyn_backend.register_user(input);
-      
-      if (result.Ok) {
-        return result.Ok;
-      } else {
-        throw new Error(result.Err || 'Registration failed');
-      }
-    } catch (error) {
-      console.error('User registration failed:', error);
-      throw new Error(`Registration failed: ${error instanceof Error ? error.message : String(error)}`);
+  static async registerUser(input: RegisterUserInput): Promise<User> {
+    const backend = this.getBackend();
+    const result: Result_7 = await backend.register_user(input);
+    if ('Ok' in result) {
+      return result.Ok;
+    } else {
+      throw new Error(this.formatError(result.Err));
     }
   }
 
   /**
-   * Get the current authenticated user
+   * Get current authenticated user
    */
   static async getCurrentUser(): Promise<User | null> {
-    try {
-      const result: User[] = await karbyn_backend.get_current_user();
-      return result.length > 0 ? result[0] : null;
-    } catch (error) {
-      console.error('Failed to get current user:', error);
-      return null;
-    }
+    const backend = this.getBackend();
+    const result: User[] = await backend.get_current_user();
+    return result.length > 0 ? result[0] : null;
   }
 
   /**
-   * Authenticate user by device ID (for biometric authentication)
+   * Get user by principal ID
    */
-  static async authenticateByDevice(deviceId: string): Promise<User | null> {
-    try {
-      if (!deviceId.trim()) {
-        throw new Error('Device ID cannot be empty');
-      }
-
-      const result: User[] = await karbyn_backend.authenticate_user(deviceId);
-      return result.length > 0 ? result[0] : null;
-    } catch (error) {
-      console.error('Device authentication failed:', error);
-      return null;
-    }
+  static async getUser(principal: Principal): Promise<User | null> {
+    const backend = this.getBackend();
+    const result: User[] = await backend.get_user(principal);
+    return result.length > 0 ? result[0] : null;
   }
 
   /**
-   * Update user profile information
+   * Get public user profile
    */
-  static async updateProfile(updates: UserProfileUpdate): Promise<void> {
-    try {
-      const input: UpdateProfileInput = {
-        bio: updates.bio ? [updates.bio] : [],
-        device_id: updates.deviceId ? [updates.deviceId] : []
-      };
+  static async getPublicUserProfile(principal: Principal): Promise<PublicUserProfile | null> {
+    const backend = this.getBackend();
+    const result: PublicUserProfile[] = await backend.get_public_user_profile(principal);
+    return result.length > 0 ? result[0] : null;
+  }
 
-      const result: BackendResult<null> = await karbyn_backend.update_profile(input);
-      
-      if (result.Err) {
-        throw new Error(result.Err);
-      }
-    } catch (error) {
-      console.error('Profile update failed:', error);
-      throw new Error(`Profile update failed: ${error instanceof Error ? error.message : String(error)}`);
+  /**
+   * Update user profile
+   */
+  static async updateProfile(input: UpdateProfileInput): Promise<void> {
+    const backend = this.getBackend();
+    const result: Result_3 = await backend.update_profile(input);
+    if ('Err' in result) {
+      throw new Error(this.formatError(result.Err));
     }
   }
 
   /**
    * Get users by role
    */
-  static async getUsersByRole(role: 'Individual' | 'Farmer' | 'NGO'): Promise<User[]> {
-    try {
-      const result: User[] = await karbyn_backend.list_users_by_role(role);
-      return result;
-    } catch (error) {
-      console.error(`Failed to get ${role} users:`, error);
-      return [];
+  static async getUsersByRole(role: UserRole): Promise<PublicUserProfile[]> {
+    const backend = this.getBackend();
+    return await backend.list_users_by_role(role);
+  }
+
+  /**
+   * Get user statistics
+   */
+  static async getUserStats(): Promise<UserStats> {
+    const backend = this.getBackend();
+    return await backend.get_user_stats();
+  }
+
+  // ==================== ACTIVITY MANAGEMENT FUNCTIONS ====================
+
+  /**
+   * Submit a new environmental activity
+   */
+  static async submitActivity(input: SubmitActivityInput): Promise<Activity> {
+    const backend = this.getBackend();
+    const result: Result_8 = await backend.submit_activity(input);
+    if ('Ok' in result) {
+      return result.Ok;
+    } else {
+      throw new Error(this.formatError(result.Err));
     }
   }
 
   /**
-   * Get community statistics
+   * Get user's activities
    */
-  static async getCommunityStats(): Promise<CommunityStats> {
-    try {
-      const stats: UserStatsResponse = await karbyn_backend.get_user_stats();
-      
-      return {
-        individuals: Number(stats.find(([role]: [string, number]) => role === 'Individual')?.[1] || 0),
-        farmers: Number(stats.find(([role]: [string, number]) => role === 'Farmer')?.[1] || 0),
-        ngos: Number(stats.find(([role]: [string, number]) => role === 'NGO')?.[1] || 0),
-        total: stats.reduce((sum: number, [, count]: [string, number]) => sum + Number(count), 0)
-      };
-    } catch (error) {
-      console.error('Failed to get community stats:', error);
-      return { individuals: 0, farmers: 0, ngos: 0, total: 0 };
+  static async getUserActivities(): Promise<ActivityHistoryItem[]> {
+    const backend = this.getBackend();
+    return await backend.get_user_activities();
+  }
+
+  /**
+   * Get activity by ID
+   */
+  static async getActivity(activityId: bigint): Promise<Activity | null> {
+    const backend = this.getBackend();
+    const result: Activity[] = await backend.get_activity(activityId);
+    return result.length > 0 ? result[0] : null;
+  }
+
+  /**
+   * Get user activity statistics
+   */
+  static async getUserActivityStats(): Promise<UserActivityStats> {
+    const backend = this.getBackend();
+    return await backend.get_user_activity_stats();
+  }
+
+  /**
+   * Get recent global activities
+   */
+  static async getRecentGlobalActivities(limit: number): Promise<ActivityHistoryItem[]> {
+    const backend = this.getBackend();
+    return await backend.get_recent_global_activities(limit);
+  }
+
+  /**
+   * Get available activity types
+   */
+  static async getActivityTypes(): Promise<Array<[string, number, string]>> {
+    const backend = this.getBackend();
+    return await backend.get_activity_types();
+  }
+
+  // ==================== TOKEN MANAGEMENT FUNCTIONS ====================
+
+  /**
+   * Get current user's token balance
+   */
+  static async getTokenBalance(): Promise<TokenBalance> {
+    const backend = this.getBackend();
+    return await backend.get_token_balance();
+  }
+
+  /**
+   * Get any user's token balance
+   */
+  static async getUserTokenBalance(principal: Principal): Promise<TokenBalance> {
+    const backend = this.getBackend();
+    return await backend.get_user_token_balance(principal);
+  }
+
+  /**
+   * Check if current user can mint an NFT
+   */
+  static async canMintNFT(): Promise<boolean> {
+    const backend = this.getBackend();
+    return await backend.can_mint_nft();
+  }
+
+  /**
+   * Get current user's complete portfolio
+   */
+  static async getUserPortfolio(): Promise<UserPortfolio> {
+    const backend = this.getBackend();
+    return await backend.get_user_portfolio();
+  }
+
+  /**
+   * Get leaderboard of top users
+   */
+  static async getLeaderboard(limit: number): Promise<LeaderboardEntry[]> {
+    const backend = this.getBackend();
+    return await backend.get_leaderboard(limit);
+  }
+
+  /**
+   * Get global token statistics
+   */
+  static async getTokenStats(): Promise<[bigint, bigint, number, number]> {
+    const backend = this.getBackend();
+    return await backend.get_token_stats();
+  }
+
+  // ==================== NFT MANAGEMENT FUNCTIONS ====================
+
+  /**
+   * Mint a new Carbon Credit NFT (requires 1000 KCT)
+   */
+  static async mintNFT(): Promise<CarbonNFT> {
+    const backend = this.getBackend();
+    const result: Result_6 = await backend.mint_nft();
+    if ('Ok' in result) {
+      return result.Ok;
+    } else {
+      throw new Error(this.formatError(result.Err));
     }
   }
 
   /**
-   * Get all users (admin function)
+   * Get current user's NFTs
    */
-  static async getAllUsers(): Promise<User[]> {
-    try {
-      const result: User[] = await karbyn_backend.get_all_users();
-      return result;
-    } catch (error) {
-      console.error('Failed to get all users:', error);
-      return [];
+  static async getMyNFTs(): Promise<CarbonNFT[]> {
+    const backend = this.getBackend();
+    return await backend.get_my_nfts();
+  }
+
+  /**
+   * Get any user's NFTs
+   */
+  static async getUserNFTs(userPrincipal: Principal): Promise<CarbonNFT[]> {
+    const backend = this.getBackend();
+    return await backend.get_user_nfts(userPrincipal);
+  }
+
+  /**
+   * Get NFT by ID
+   */
+  static async getNFT(nftId: bigint): Promise<CarbonNFT | null> {
+    const backend = this.getBackend();
+    const result: CarbonNFT[] = await backend.get_nft(nftId);
+    return result.length > 0 ? result[0] : null;
+  }
+
+  /**
+   * Get global NFT statistics
+   */
+  static async getGlobalNFTStats(): Promise<[number, number, number, number]> {
+    const backend = this.getBackend();
+    return await backend.get_global_nft_stats();
+  }
+
+  // ==================== MARKETPLACE FUNCTIONS ====================
+
+  /**
+   * List NFT for sale on marketplace
+   */
+  static async listNFT(input: ListNFTInput): Promise<MarketplaceListing> {
+    const backend = this.getBackend();
+    const result: Result_5 = await backend.list_nft(input);
+    if ('Ok' in result) {
+      return result.Ok;
+    } else {
+      throw new Error(this.formatError(result.Err));
     }
   }
 
   /**
-   * Get user by principal ID
+   * Buy NFT from marketplace
    */
-  static async getUserById(principalId: string): Promise<User | null> {
-    try {
-      const result: User[] = await karbyn_backend.get_user(principalId);
-      return result.length > 0 ? result[0] : null;
-    } catch (error) {
-      console.error('Failed to get user by ID:', error);
-      return null;
+  static async buyNFT(input: BuyNFTInput): Promise<NFTTransaction> {
+    const backend = this.getBackend();
+    const result: Result = await backend.buy_nft(input);
+    if ('Ok' in result) {
+      return result.Ok;
+    } else {
+      throw new Error(this.formatError(result.Err));
     }
   }
 
   /**
-   * Internal function to update user stats (for other modules)
-   * This will be used by activity and NFT modules
+   * Cancel NFT listing
    */
-  static async updateUserStats(
-    principalId: string, 
-    carbonOffsetDelta: number, 
-    activityCountDelta: number, 
-    nftCountDelta: number
-  ): Promise<void> {
-    try {
-      const result: BackendResult<null> = await karbyn_backend.update_user_stats(
-        principalId, 
-        carbonOffsetDelta, 
-        activityCountDelta, 
-        nftCountDelta
-      );
-      
-      if (result.Err) {
-        throw new Error(result.Err);
-      }
-    } catch (error) {
-      console.error('Failed to update user stats:', error);
-      throw new Error(`Stats update failed: ${error instanceof Error ? error.message : String(error)}`);
+  static async cancelListing(listingId: bigint): Promise<void> {
+    const backend = this.getBackend();
+    const result: Result_1 = await backend.cancel_listing(listingId);
+    if ('Err' in result) {
+      throw new Error(this.formatError(result.Err));
     }
   }
 
   /**
-   * Utility function to format user role for display
+   * Get marketplace listings with optional filters
    */
-  static formatUserRole(role: UserRole): string {
-    if ('Individual' in role) return 'Individual';
-    if ('Farmer' in role) return 'Farmer';
-    if ('NGO' in role) return 'NGO';
-    return 'Unknown';
+  static async getMarketplaceListings(filter?: MarketplaceFilter): Promise<MarketplaceListing[]> {
+    const backend = this.getBackend();
+    return await backend.get_marketplace_listings(filter ? [filter] : []);
   }
 
   /**
-   * Utility function to format verification status
+   * Get current user's marketplace listings
    */
-  static getVerificationLevel(user: User): 'unverified' | 'partial' | 'verified' {
-    switch (user.verification_status.toLowerCase()) {
-      case 'verified': return 'verified';
-      case 'partially verified': return 'partial';
-      default: return 'unverified';
+  static async getMyListings(): Promise<MarketplaceListing[]> {
+    const backend = this.getBackend();
+    return await backend.get_my_listings();
+  }
+
+  /**
+   * Get marketplace statistics
+   */
+  static async getMarketplaceStats(): Promise<MarketplaceStats> {
+    const backend = this.getBackend();
+    return await backend.get_marketplace_stats();
+  }
+
+  /**
+   * Get recent marketplace transactions
+   */
+  static async getRecentTransactions(limit: number): Promise<NFTTransaction[]> {
+    const backend = this.getBackend();
+    return await backend.get_recent_transactions(limit);
+  }
+
+  /**
+   * Get current user's transaction history
+   */
+  static async getMyTransactions(): Promise<NFTTransaction[]> {
+    const backend = this.getBackend();
+    return await backend.get_my_transactions();
+  }
+
+  // ==================== UTILITY FUNCTIONS ====================
+
+  /**
+   * Format error messages for display
+   */
+  private static formatError(error: any): string {
+    if (typeof error === 'string') return error;
+    if (typeof error === 'object' && error !== null) {
+      const key = Object.keys(error)[0];
+      const value = error[key];
+      if (value === null) return key.replace(/([A-Z])/g, ' $1').trim();
+      return `${key}: ${value}`;
     }
+    return 'Unknown error';
   }
 
   /**
-   * Utility function to check if user can perform certain actions
+   * Convert KCT tokens to display format
    */
-  static canUserSubmitProjects(user: User): boolean {
-    const role = this.formatUserRole(user.role);
-    return role === 'Farmer' || role === 'NGO';
+  static formatKCT(amount: bigint): string {
+    return `${amount.toString()} KCT`;
   }
 
   /**
-   * Utility function to get user's carbon offset in different units
+   * Convert KCT to tons of CO₂
    */
-  static getFormattedCarbonOffset(user: User) {
-    const kgCO2 = user.total_carbon_offset;
+  static kctToTons(kct: bigint): number {
+    return Number(kct) / 1000; // 1000 KCT = 1 ton CO₂
+  }
+
+  /**
+   * Check if user can mint NFT based on balance
+   */
+  static canMintFromBalance(balance: bigint): boolean {
+    return balance >= 1000n; // 1000 KCT required
+  }
+
+  /**
+   * Format activity type for display
+   */
+  static formatActivityType(activityType: ActivityType): string {
+    if ('PlantTree' in activityType) return 'Plant Tree';
+    if ('RecycleWaste' in activityType) return 'Recycle Waste';
+    if ('UsePublicTransport' in activityType) return 'Use Public Transport';
+    if ('UseRenewableEnergy' in activityType) return 'Use Renewable Energy';
+    if ('ReduceConsumption' in activityType) return 'Reduce Consumption';
+    return 'Unknown Activity';
+  }
+
+  /**
+   * Get carbon offset display with different units
+   */
+  static formatCarbonOffset(offsetKg: number) {
     return {
-      kg: kgCO2,
-      tons: kgCO2 / 1000,
-      treesEquivalent: Math.round(kgCO2 / 22), // Rough estimate: 1 tree absorbs ~22kg CO2/year
-      carMilesAvoided: Math.round(kgCO2 * 2.3) // Rough estimate: 1kg CO2 = 2.3 miles
+      kg: Math.round(offsetKg * 100) / 100,
+      tons: Math.round((offsetKg / 1000) * 1000) / 1000,
+      treesEquivalent: Math.round(offsetKg / 22), // ~22kg CO₂ per tree per year
+      carMilesAvoided: Math.round(offsetKg * 2.3) // ~2.3 miles per kg CO₂
     };
   }
 }
 
-// React Hook for User Management
-export const useKarbynUser = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadUser = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const currentUser = await KarbynBackendService.getCurrentUser();
-      setUser(currentUser);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load user');
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const registerUser = useCallback(async (userData: UserRegistrationData) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const newUser = await KarbynBackendService.registerUser(userData);
-      setUser(newUser);
-      return newUser;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const updateProfile = useCallback(async (updates: UserProfileUpdate) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await KarbynBackendService.updateProfile(updates);
-      await loadUser(); // Reload user data
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Profile update failed';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, [loadUser]);
-
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
-
-  return {
-    user,
-    loading,
-    error,
-    loadUser,
-    registerUser,
-    updateProfile,
-    isRegistered: !!user,
-    userRole: user ? KarbynBackendService.formatUserRole(user.role) : null,
-    verificationLevel: user ? KarbynBackendService.getVerificationLevel(user) : 'unverified',
-    canSubmitProjects: user ? KarbynBackendService.canUserSubmitProjects(user) : false,
-    carbonOffsetFormatted: user ? KarbynBackendService.getFormattedCarbonOffset(user) : null
-  };
+// Export types for use in other modules
+export type {
+  User,
+  UserRole,
+  RegisterUserInput,
+  UpdateProfileInput,
+  UserStats,
+  PublicUserProfile,
+  Activity,
+  ActivityType,
+  SubmitActivityInput,
+  ActivityHistoryItem,
+  UserActivityStats,
+  ActivityVerificationStatus,
+  TokenBalance,
+  UserPortfolio,
+  LeaderboardEntry,
+  CarbonNFT,
+  ActivitySummary,
+  MarketplaceListing,
+  NFTTransaction,
+  ListNFTInput,
+  BuyNFTInput,
+  MarketplaceFilter,
+  MarketplaceStats,
+  UserError,
+  ActivityError,
+  TokenError
 };
 
 export default KarbynBackendService;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/MultiWalletAuthContext';
 import { useActivity } from '../contexts/ActivityContext';
 import { useNFT } from '../contexts/NFTContext';
 import { Link } from 'react-router-dom';

@@ -1,3 +1,126 @@
+type Activity = record {
+  id : nat64;
+  activity_type : ActivityType;
+  user_principal : principal;
+  proof_url : opt text;
+  verification_score : nat8;
+  calculated_carbon_offset : float64;
+  description : text;
+  verification_status : ActivityVerificationStatus;
+  nft_generated : bool;
+  verified_at : opt nat64;
+  quantity : float64;
+  additional_notes : opt text;
+  location : opt text;
+  submitted_at : nat64;
+};
+type ActivityError = variant {
+  MissingRequiredField : text;
+  CalculationError : text;
+  ValidationFailed : text;
+  DuplicateActivity;
+  InvalidQuantity : text;
+  QuantityOutOfRange : record { float64; float64; float64 };
+  ActivityNotFound;
+  LocationRequired;
+  InsufficientPermissions;
+  ProofRequired;
+  UserNotFound;
+  InvalidActivityType : text;
+};
+type ActivityHistoryItem = record {
+  id : nat64;
+  activity_type : ActivityType;
+  verification_score : nat8;
+  calculated_carbon_offset : float64;
+  description : text;
+  verification_status : ActivityVerificationStatus;
+  nft_generated : bool;
+  quantity : float64;
+  location : opt text;
+  submitted_at : nat64;
+};
+type ActivitySummary = record {
+  top_activities : vec text;
+  total_activities : nat32;
+  activity_breakdown : vec ActivityTypeCount;
+  verification_period : text;
+  total_carbon_offset : float64;
+};
+type ActivityType = variant {
+  UseRenewableEnergy;
+  RecycleWaste;
+  ReduceConsumption;
+  UsePublicTransport;
+  PlantTree;
+};
+type ActivityTypeCount = record {
+  activity_type : text;
+  count : nat32;
+  total_offset : float64;
+};
+type ActivityVerificationStatus = variant {
+  UnderReview;
+  Rejected;
+  Verified;
+  Pending;
+};
+type BuyNFTInput = record { listing_id : nat64 };
+type CarbonNFT = record {
+  nft_id : nat64;
+  owner : principal;
+  metadata_uri : opt text;
+  offset_amount : text;
+  is_listed : bool;
+  activity_summary : ActivitySummary;
+  minted_at : nat64;
+};
+type LeaderboardEntry = record {
+  nfts_minted : nat32;
+  "principal" : principal;
+  username : opt text;
+  tokens_earned : nat64;
+  rank : nat32;
+  total_carbon_offset : float64;
+};
+type ListNFTInput = record {
+  nft_id : nat64;
+  description : opt text;
+  price : nat64;
+};
+type ListingStatus = variant { Sold; Active; Cancelled };
+type MarketplaceFilter = record {
+  seller : opt principal;
+  limit : opt nat32;
+  max_price : opt nat64;
+  min_price : opt nat64;
+};
+type MarketplaceListing = record {
+  nft_id : nat64;
+  status : ListingStatus;
+  description : opt text;
+  seller : principal;
+  listing_id : nat64;
+  price : nat64;
+  listed_at : nat64;
+};
+type MarketplaceStats = record {
+  total_sales : nat32;
+  average_price : float64;
+  total_nfts_listed : nat32;
+  total_volume : nat64;
+  total_nfts_minted : nat32;
+  total_carbon_offset : float64;
+};
+type NFTTransaction = record {
+  transaction_id : nat64;
+  nft_id : nat64;
+  transaction_type : TransactionType;
+  seller : principal;
+  timestamp : nat64;
+  buyer : principal;
+  price : nat64;
+};
 type PublicUserProfile = record {
   id : principal;
   nfts_earned : nat32;
@@ -16,8 +139,44 @@ type RegisterUserInput = record {
   device_id : opt text;
   location : opt text;
 };
-type Result = variant { Ok; Err : UserError };
-type Result_1 = variant { Ok : User; Err : UserError };
+type Result = variant { Ok : NFTTransaction; Err : TokenError };
+type Result_1 = variant { Ok; Err : TokenError };
+type Result_2 = variant { Ok; Err : ActivityError };
+type Result_3 = variant { Ok; Err : UserError };
+type Result_4 = variant { Ok : vec ActivityHistoryItem; Err : ActivityError };
+type Result_5 = variant { Ok : MarketplaceListing; Err : TokenError };
+type Result_6 = variant { Ok : CarbonNFT; Err : TokenError };
+type Result_7 = variant { Ok : User; Err : UserError };
+type Result_8 = variant { Ok : Activity; Err : ActivityError };
+type SubmitActivityInput = record {
+  activity_type : text;
+  proof_url : opt text;
+  description : text;
+  quantity : float64;
+  additional_notes : opt text;
+  location : opt text;
+};
+type TokenBalance = record {
+  "principal" : principal;
+  balance : nat64;
+  last_updated : nat64;
+  total_earned : nat64;
+};
+type TokenError = variant {
+  NFTAlreadyListed;
+  InvalidPrice;
+  ListingNotActive;
+  InsufficientTokensForMinting;
+  InsufficientBalance : record { available : nat64; required : nat64 };
+  NFTNotListed;
+  NFTNotFound;
+  CannotBuyOwnNFT;
+  NoActivitiesForNFT;
+  NFTNotOwned;
+  MarketplaceError : text;
+  ListingNotFound;
+};
+type TransactionType = variant { Mint; Sale; Transfer };
 type UpdateProfileInput = record {
   bio : opt text;
   biometric_enabled : opt bool;
@@ -40,6 +199,17 @@ type User = record {
   location : opt text;
   total_carbon_offset : float64;
 };
+type UserActivityStats = record {
+  nfts_generated : nat32;
+  activities_by_type : vec record { ActivityType; nat32 };
+  verified_activities : nat32;
+  activity_streak_days : nat32;
+  average_verification_score : float64;
+  total_activities : nat32;
+  last_activity_date : opt nat64;
+  total_carbon_offset : float64;
+  pending_activities : nat32;
+};
 type UserError = variant {
   UserAlreadyExists;
   BioTooLong;
@@ -49,6 +219,16 @@ type UserError = variant {
   NameTooLong;
   UserNotFound;
   LocationTooLong;
+};
+type UserPortfolio = record {
+  nfts_minted : nat32;
+  "principal" : principal;
+  total_tokens_earned : nat64;
+  nfts_owned : vec nat64;
+  marketplace_sales : nat32;
+  marketplace_purchases : nat32;
+  token_balance : nat64;
+  total_carbon_offset : float64;
 };
 type UserRole = variant { NGO; Farmer; Individual };
 type UserStats = record {
@@ -62,17 +242,54 @@ type UserStats = record {
 };
 service : {
   authenticate_user : (text) -> (opt User) query;
-  disable_biometric_auth : () -> (Result);
-  enable_biometric_auth : (text) -> (Result);
+  buy_nft : (BuyNFTInput) -> (Result);
+  can_mint_nft : () -> (bool) query;
+  cancel_listing : (nat64) -> (Result_1);
+  delete_activity : (nat64) -> (Result_2);
+  disable_biometric_auth : () -> (Result_3);
+  enable_biometric_auth : (text) -> (Result_3);
   get_active_users_count : () -> (nat32) query;
+  get_activities_by_type : (text) -> (Result_4) query;
+  get_activity : (nat64) -> (opt Activity) query;
+  get_activity_types : () -> (vec record { text; float64; text }) query;
+  get_all_activities_for_verification : () -> (vec ActivityHistoryItem) query;
   get_all_users : () -> (vec PublicUserProfile) query;
   get_current_user : () -> (opt User) query;
+  get_daily_token_earnings : () -> (vec record { text; nat64 }) query;
+  get_global_activity_stats : () -> (nat32, float64, nat32, nat32) query;
+  get_global_nft_stats : () -> (nat32, nat32, nat32, float64) query;
+  get_leaderboard : (nat32) -> (vec LeaderboardEntry) query;
+  get_marketplace_listings : (opt MarketplaceFilter) -> (
+      vec MarketplaceListing,
+    ) query;
+  get_marketplace_stats : () -> (MarketplaceStats) query;
+  get_my_listings : () -> (vec MarketplaceListing) query;
+  get_my_nfts : () -> (vec CarbonNFT) query;
+  get_my_transactions : () -> (vec NFTTransaction) query;
+  get_nft : (nat64) -> (opt CarbonNFT) query;
+  get_nft_ownership_history : (nat64) -> (vec NFTTransaction) query;
   get_public_user_profile : (principal) -> (opt PublicUserProfile) query;
+  get_recent_global_activities : (nat32) -> (vec ActivityHistoryItem) query;
+  get_recent_transactions : (nat32) -> (vec NFTTransaction) query;
+  get_token_balance : () -> (TokenBalance) query;
+  get_token_distribution : () -> (vec record { text; nat32 }) query;
+  get_token_stats : () -> (nat64, nat64, nat32, float64) query;
   get_user : (principal) -> (opt User) query;
+  get_user_activities : () -> (vec ActivityHistoryItem) query;
+  get_user_activity_stats : () -> (UserActivityStats) query;
+  get_user_nfts : (principal) -> (vec CarbonNFT) query;
+  get_user_portfolio : () -> (UserPortfolio) query;
+  get_user_portfolio_by_principal : (principal) -> (UserPortfolio) query;
   get_user_stats : () -> (UserStats) query;
+  get_user_token_balance : (principal) -> (TokenBalance) query;
+  get_user_transactions : (principal) -> (vec NFTTransaction) query;
+  list_nft : (ListNFTInput) -> (Result_5);
   list_users_by_role : (text) -> (vec PublicUserProfile) query;
-  register_user : (RegisterUserInput) -> (Result_1);
-  update_profile : (UpdateProfileInput) -> (Result);
-  update_user_stats : (principal, float64, nat32, nat32) -> (Result);
+  mint_nft : () -> (Result_6);
+  register_user : (RegisterUserInput) -> (Result_7);
+  submit_activity : (SubmitActivityInput) -> (Result_8);
+  update_profile : (UpdateProfileInput) -> (Result_3);
+  update_user_stats : (principal, float64, nat32, nat32) -> (Result_3);
   user_exists : (principal) -> (bool) query;
+  verify_activity : (nat64, nat8) -> (Result_2);
 }
