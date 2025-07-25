@@ -88,17 +88,6 @@ const ProjectBasicsForm = ({ formData, updateFormData, errors }) => {
           description="City, state/province, or specific area"
         />
 
-        <Input
-          label="Project Area (hectares)"
-          type="number"
-          placeholder="e.g., 1500"
-          value={formData.basics.area || ''}
-          onChange={(e) => handleInputChange('area', e.target.value)}
-          error={errors.area}
-          required
-          description="Total area covered by your project"
-        />
-
         <div className="lg:col-span-2">
           <label className="block text-sm font-medium text-foreground mb-2">
             Project Description <span className="text-error">*</span>
@@ -114,20 +103,9 @@ const ProjectBasicsForm = ({ formData, updateFormData, errors }) => {
             <p className="mt-1 text-sm text-error">{errors.description}</p>
           )}
           <p className="mt-1 text-xs text-muted-foreground">
-            Minimum 100 characters. Be specific about your project's environmental and social impact.
+            Minimum 50 characters. Be specific about your project's environmental and social impact.
           </p>
         </div>
-
-        <Input
-          label="Expected Duration (years)"
-          type="number"
-          placeholder="e.g., 10"
-          value={formData.basics.duration || ''}
-          onChange={(e) => handleInputChange('duration', e.target.value)}
-          error={errors.duration}
-          required
-          description="How long will the project run?"
-        />
 
         <Input
           label="Estimated Carbon Impact (tCO2e/year)"
@@ -139,6 +117,8 @@ const ProjectBasicsForm = ({ formData, updateFormData, errors }) => {
           required
           description="Annual carbon dioxide equivalent reduction/sequestration"
         />
+        
+        {/* Coordinates are now handled by the LocationSelector component */}
       </div>
 
       <div className="bg-accent/10 border border-accent/20 rounded-lg p-4">

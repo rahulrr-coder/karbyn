@@ -4,6 +4,7 @@ import Footer from '../../components/ui/Footer';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
+import Toast from '../../components/ui/Toast';
 import ProjectBasicsForm from './components/ProjectBasicsForm';
 import ImpactMethodologyForm from './components/ImpactMethodologyForm';
 import DocumentationUpload from './components/DocumentationUpload';
@@ -11,6 +12,8 @@ import ReviewSubmit from './components/ReviewSubmit';
 import ProgressIndicator from './components/ProgressIndicator';
 import LocationSelector from './components/LocationSelector';
 import SuccessModal from './components/SuccessModal';
+import TestDataLoader from './components/TestDataLoader';
+import { submitProject } from '../../api/projectApi';
 
 const SubmitProject = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -19,11 +22,11 @@ const SubmitProject = () => {
   const [submittedProjectId, setSubmittedProjectId] = useState('');
   const [errors, setErrors] = useState({});
   const [lastSaved, setLastSaved] = useState(null);
+  const [toast, setToast] = useState({ visible: false, type: 'info', message: '' });
 
   const steps = [
     { title: 'Project Basics', subtitle: 'Core information' },
-    { title: 'Methodology', subtitle: 'Impact measurement' },
-    { title: 'Documentation', subtitle: 'Supporting files' },
+    { title: 'Impact Details', subtitle: 'Methodology & documentation' },
     { title: 'Review & Submit', subtitle: 'Final confirmation' }
   ];
 
@@ -33,35 +36,21 @@ const SubmitProject = () => {
       type: '',
       region: '',
       location: '',
-      area: '',
       description: '',
-      duration: '',
       carbonImpact: '',
       latitude: '',
       longitude: ''
     },
-    methodology: {
+    impact: {
       standard: '',
       monitoringFrequency: '',
       measurementTools: [],
-      baseline: '',
-      baselineCarbon: '',
-      measurementStartDate: '',
-      additionality: '',
-      qualityAssurance: ''
-    },
-    documentation: {
-      certificates: [],
-      'baseline-data': [],
       photos: [],
-      methodology: [],
-      community: [],
-      financial: []
+      certificates: []
     },
     review: {
       acceptedTerms: false,
-      acceptedPrivacy: false,
-      acceptedCommunity: false
+      acceptedPrivacy: false
     }
   });
 
@@ -74,6 +63,16 @@ const SubmitProject = () => {
 
     return () => clearInterval(saveInterval);
   }, [formData]);
+  
+  // Show toast message
+  const showToast = (type, message, duration = 5000) => {
+    setToast({ visible: true, type, message, duration });
+  };
+  
+  // Hide toast message
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, visible: false }));
+  };
 
   // Load saved draft on mount
   useEffect(() => {
@@ -113,37 +112,22 @@ const SubmitProject = () => {
         if (!formData.basics.type) newErrors.type = 'Project type is required';
         if (!formData.basics.region) newErrors.region = 'Region is required';
         if (!formData.basics.location?.trim()) newErrors.location = 'Specific location is required';
-        if (!formData.basics.area) newErrors.area = 'Project area is required';
-        if (!formData.basics.description?.trim() || formData.basics.description.length < 100) {
-          newErrors.description = 'Description must be at least 100 characters';
+        if (!formData.basics.description?.trim() || formData.basics.description.length < 50) {
+          newErrors.description = 'Description must be at least 50 characters';
         }
-        if (!formData.basics.duration) newErrors.duration = 'Project duration is required';
         if (!formData.basics.carbonImpact) newErrors.carbonImpact = 'Carbon impact estimate is required';
         break;
 
-      case 2: // Methodology
-        if (!formData.methodology.standard) newErrors.standard = 'Carbon standard is required';
-        if (!formData.methodology.monitoringFrequency) newErrors.monitoringFrequency = 'Monitoring frequency is required';
-        if (!formData.methodology.measurementTools?.length) newErrors.measurementTools = 'At least one measurement tool is required';
-        if (!formData.methodology.baseline?.trim()) newErrors.baseline = 'Baseline methodology is required';
-        if (!formData.methodology.baselineCarbon) newErrors.baselineCarbon = 'Baseline carbon level is required';
-        if (!formData.methodology.measurementStartDate) newErrors.measurementStartDate = 'Measurement start date is required';
-        if (!formData.methodology.additionality?.trim()) newErrors.additionality = 'Additionality justification is required';
+      case 2: // Impact Details
+        if (!formData.impact.standard) newErrors.standard = 'Carbon standard is required';
+        if (!formData.impact.monitoringFrequency) newErrors.monitoringFrequency = 'Monitoring frequency is required';
+        if (!formData.impact.measurementTools?.length === 0) newErrors.measurementTools = 'At least one measurement tool is required';
+        if (!formData.impact.photos?.length === 0) newErrors.photos = 'At least one project photo is required';
         break;
 
-      case 3: // Documentation
-        const requiredDocs = ['certificates', 'baseline-data', 'photos', 'methodology'];
-        requiredDocs.forEach(docType => {
-          if (!formData.documentation[docType]?.length) {
-            newErrors[docType] = `${docType.replace('-', ' ')} documentation is required`;
-          }
-        });
-        break;
-
-      case 4: // Review & Submit
+      case 3: // Review & Submit
         if (!formData.review.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms of service';
         if (!formData.review.acceptedPrivacy) newErrors.acceptedPrivacy = 'You must accept the privacy policy';
-        if (!formData.review.acceptedCommunity) newErrors.acceptedCommunity = 'You must accept the community verification process';
         break;
     }
 
@@ -154,6 +138,9 @@ const SubmitProject = () => {
   const handleNext = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => Math.min(prev + 1, steps.length));
+      showToast('success', `Step ${currentStep} completed successfully!`, 3000);
+    } else {
+      showToast('error', 'Please fix the errors before proceeding', 5000);
     }
   };
 
@@ -162,27 +149,34 @@ const SubmitProject = () => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(4)) return;
+    if (!validateStep(3)) {
+      showToast('error', 'Please fix the errors before submitting', 5000);
+      return;
+    }
 
     setIsSubmitting(true);
+    showToast('info', 'Submitting your project...', 10000);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call the actual API
+      const response = await submitProject(formData);
       
-      // Generate mock project ID
-      const projectId = `KARBYN-${Date.now().toString().slice(-6)}`;
-      setSubmittedProjectId(projectId);
+      // Set the project ID from the response
+      setSubmittedProjectId(response.projectId);
       
       // Clear saved draft
       localStorage.removeItem('karbyn-project-draft');
       
-      // Show success modal
+      // Show success toast and modal
+      hideToast();
+      showToast('success', 'Project submitted successfully!', 5000);
       setShowSuccessModal(true);
       
     } catch (error) {
       console.error('Submission error:', error);
-      setErrors({ submit: 'Failed to submit project. Please try again.' });
+      setErrors({ submit: error.message || 'Failed to submit project. Please try again.' });
+      hideToast();
+      showToast('error', error.message || 'Failed to submit project. Please try again.', 8000);
     } finally {
       setIsSubmitting(false);
     }
@@ -214,14 +208,6 @@ const SubmitProject = () => {
           />
         );
       case 3:
-        return (
-          <DocumentationUpload
-            formData={formData}
-            updateFormData={updateFormData}
-            errors={errors}
-          />
-        );
-      case 4:
         return (
           <ReviewSubmit
             formData={formData}
@@ -353,6 +339,20 @@ const SubmitProject = () => {
         onClose={() => setShowSuccessModal(false)}
         projectId={submittedProjectId}
       />
+      
+      {/* Toast Notification */}
+      <Toast
+        visible={toast.visible}
+        type={toast.type}
+        message={toast.message}
+        duration={toast.duration}
+        onClose={hideToast}
+      />
+      
+      {/* Test Data Loader - For development only */}
+      {/* {process.env.NODE_ENV !== 'production' && ( */}
+        <TestDataLoader updateFormData={updateFormData} />
+      {/* )} */}
     </div>
   );
 };

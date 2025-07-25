@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Button from '../../../components/ui/Button';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
+import CarbonVisualization from './CarbonVisualization';
 
 const HeroSection = () => {
   return (
@@ -74,44 +75,9 @@ const HeroSection = () => {
             </div>
           </div>
           
-          {/* Visual */}
+          {/* Visual - Interactive Carbon Cycle */}
           <div className="relative">
-            <div className="relative w-full max-w-lg mx-auto">
-              {/* Main Image */}
-              <div className="relative rounded-2xl overflow-hidden organic-shadow-prominent">
-                <Image
-                  src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                  alt="Forest landscape representing climate action"
-                  className="w-full h-80 object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent"></div>
-              </div>
-              
-              {/* Floating Cards */}
-              <div className="absolute -top-4 -left-4 bg-card rounded-lg organic-shadow-moderate p-4 border border-border">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                    <Icon name="Leaf" size={20} className="text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Carbon Offset</p>
-                    <p className="text-xs text-muted-foreground">1,247 tons CO₂</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="absolute -bottom-4 -right-4 bg-card rounded-lg organic-shadow-moderate p-4 border border-border">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                    <Icon name="Coins" size={20} className="text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Tokens Minted</p>
-                    <p className="text-xs text-muted-foreground">24,891 KRB</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <CarbonVisualization />
           </div>
         </div>
       </div>

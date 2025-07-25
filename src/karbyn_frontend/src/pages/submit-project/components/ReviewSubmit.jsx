@@ -12,9 +12,7 @@ const ReviewSubmit = ({ formData, updateFormData, errors, onSubmit, isSubmitting
     updateFormData('review', { ...formData.review, acceptedPrivacy: checked });
   };
 
-  const handleCommunityChange = (checked) => {
-    updateFormData('review', { ...formData.review, acceptedCommunity: checked });
-  };
+  // Removed community verification checkbox
 
   const formatFileCount = (files) => {
     if (!files || files.length === 0) return 'No files uploaded';
@@ -90,21 +88,16 @@ const ReviewSubmit = ({ formData, updateFormData, errors, onSubmit, isSubmitting
             <p className="text-foreground">{formData.basics.location || 'Not specified'}</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Project Area</label>
-            <p className="text-foreground">
-              {formData.basics.area ? `${formData.basics.area} hectares` : 'Not specified'}
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">Duration</label>
-            <p className="text-foreground">
-              {formData.basics.duration ? `${formData.basics.duration} years` : 'Not specified'}
-            </p>
-          </div>
-          <div>
             <label className="text-sm font-medium text-muted-foreground">Expected Carbon Impact</label>
             <p className="text-foreground">
               {formData.basics.carbonImpact ? `${formData.basics.carbonImpact} tCO2e/year` : 'Not specified'}
+            </p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Coordinates</label>
+            <p className="text-foreground">
+              {formData.basics.latitude && formData.basics.longitude ? 
+                `${formData.basics.latitude}, ${formData.basics.longitude}` : 'Not specified'}
             </p>
           </div>
         </div>
@@ -119,37 +112,37 @@ const ReviewSubmit = ({ formData, updateFormData, errors, onSubmit, isSubmitting
         )}
       </div>
 
-      {/* Methodology Summary */}
+      {/* Impact Details Summary */}
       <div className="bg-card border border-border rounded-lg p-6">
         <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center space-x-2">
           <Icon name="Calculator" size={20} />
-          <span>Methodology Summary</span>
+          <span>Impact Details</span>
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="text-sm font-medium text-muted-foreground">Carbon Standard</label>
-            <p className="text-foreground">{getStandardLabel(formData.methodology.standard) || 'Not specified'}</p>
+            <p className="text-foreground">{getStandardLabel(formData.impact.standard) || 'Not specified'}</p>
           </div>
           <div>
             <label className="text-sm font-medium text-muted-foreground">Monitoring Frequency</label>
             <p className="text-foreground capitalize">
-              {formData.methodology.monitoringFrequency?.replace('-', ' ') || 'Not specified'}
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-muted-foreground">Baseline Carbon Level</label>
-            <p className="text-foreground">
-              {formData.methodology.baselineCarbon ? `${formData.methodology.baselineCarbon} tCO2e` : 'Not specified'}
+              {formData.impact.monitoringFrequency?.replace('-', ' ') || 'Not specified'}
             </p>
           </div>
           <div>
             <label className="text-sm font-medium text-muted-foreground">Measurement Tools</label>
             <p className="text-foreground">
-              {formData.methodology.measurementTools?.length > 0 
-                ? `${formData.methodology.measurementTools.length} tools selected`
+              {formData.impact.measurementTools?.length > 0 
+                ? `${formData.impact.measurementTools.length} tools selected`
                 : 'Not specified'
               }
+            </p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-muted-foreground">Documentation</label>
+            <p className="text-foreground">
+              {(formData.impact.photos?.length || 0) + (formData.impact.certificates?.length || 0)} files uploaded
             </p>
           </div>
         </div>
@@ -163,29 +156,40 @@ const ReviewSubmit = ({ formData, updateFormData, errors, onSubmit, isSubmitting
         </h3>
         
         <div className="space-y-3">
-          {documentationSummary.map((doc) => {
-            const files = formData.documentation[doc.id] || [];
-            const hasFiles = files.length > 0;
-            
-            return (
-              <div key={doc.id} className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
-                <div className="flex items-center space-x-3">
-                  <Icon 
-                    name={hasFiles ? "CheckCircle" : "Circle"} 
-                    size={16} 
-                    className={hasFiles ? "text-success" : "text-muted-foreground"} 
-                  />
-                  <span className="text-foreground">
-                    {doc.title}
-                    {doc.required && <span className="text-error ml-1">*</span>}
-                  </span>
-                </div>
-                <span className="text-sm text-muted-foreground">
-                  {formatFileCount(files)}
-                </span>
-              </div>
-            );
-          })}
+          {/* Project Photos */}
+          <div className="flex items-center justify-between py-2 border-b border-border">
+            <div className="flex items-center space-x-3">
+              <Icon 
+                name={(formData.impact.photos?.length > 0) ? "CheckCircle" : "Circle"} 
+                size={16} 
+                className={(formData.impact.photos?.length > 0) ? "text-success" : "text-muted-foreground"} 
+              />
+              <span className="text-foreground">
+                Project Photos
+                <span className="text-error ml-1">*</span>
+              </span>
+            </div>
+            <span className="text-sm text-muted-foreground">
+              {formatFileCount(formData.impact.photos)}
+            </span>
+          </div>
+          
+          {/* Certificates */}
+          <div className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
+            <div className="flex items-center space-x-3">
+              <Icon 
+                name={(formData.impact.certificates?.length > 0) ? "CheckCircle" : "Circle"} 
+                size={16} 
+                className={(formData.impact.certificates?.length > 0) ? "text-success" : "text-muted-foreground"} 
+              />
+              <span className="text-foreground">
+                Certificates & Verifications
+              </span>
+            </div>
+            <span className="text-sm text-muted-foreground">
+              {formatFileCount(formData.impact.certificates)}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -212,15 +216,6 @@ const ReviewSubmit = ({ formData, updateFormData, errors, onSubmit, isSubmitting
             checked={formData.review.acceptedPrivacy || false}
             onChange={(e) => handlePrivacyChange(e.target.checked)}
             error={errors.acceptedPrivacy}
-            required
-          />
-          
-          <Checkbox
-            label="I understand the community verification process"
-            description="Your project will undergo community review and verification before tokenization. This process may take 2-4 weeks."
-            checked={formData.review.acceptedCommunity || false}
-            onChange={(e) => handleCommunityChange(e.target.checked)}
-            error={errors.acceptedCommunity}
             required
           />
         </div>
@@ -263,7 +258,7 @@ const ReviewSubmit = ({ formData, updateFormData, errors, onSubmit, isSubmitting
           loading={isSubmitting}
           iconName="Send"
           iconPosition="right"
-          disabled={!formData.review.acceptedTerms || !formData.review.acceptedPrivacy || !formData.review.acceptedCommunity}
+          disabled={!formData.review.acceptedTerms || !formData.review.acceptedPrivacy}
         >
           {isSubmitting ? 'Submitting Project...' : 'Submit Project for Review'}
         </Button>
