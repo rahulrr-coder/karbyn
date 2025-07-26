@@ -91,6 +91,7 @@ const Routes = () => {
                 <Route path="/marketplace/*" element={<SimpleLogin />} />
                 <Route path="/community/*" element={<SimpleLogin />} />
                 <Route path="/business/*" element={<SimpleLogin />} />
+                <Route path="/projects-listing" element={<SimpleLogin />} />
                 <Route path="/submit-project" element={<SimpleLogin />} />
                 <Route path="/project-details" element={<SimpleLogin />} />
               </>

@@ -17,6 +17,9 @@
     "jsx": "react-jsx",
     "types": ["vite/client"]
   },
-  "include": ["../declarations/**/*"],
-  "exclude": ["src/**/*"]
+  "include": [
+    "src/**/*",
+    "../declarations/**/*"
+  ],
+  "exclude": ["node_modules", "dist"]
 }
