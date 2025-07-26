@@ -7,8 +7,8 @@ const SuccessModal = ({ isOpen, onClose, projectId }) => {
 
   const handleViewDashboard = () => {
     onClose();
-    // Navigate to dashboard - in a real app, this would use router
-    window.location.href = '/impact-dashboard';
+    // Navigate to main dashboard
+    window.location.href = '/dashboard';
   };
 
   const handleViewProjects = () => {

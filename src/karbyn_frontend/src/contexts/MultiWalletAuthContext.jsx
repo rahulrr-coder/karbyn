@@ -41,22 +41,59 @@ const WalletManager = {
     }
 
     try {
+      // For local development, we need to use the local host
+      const isLocal = window.location.hostname === 'localhost' || 
+                     window.location.hostname.includes('localhost') ||
+                     window.location.hostname === '127.0.0.1';
+      
+      const host = isLocal ? 'http://localhost:4943' : 'https://ic0.app';
+
       const connected = await window.ic.plug.requestConnect({
         whitelist: [canisterId],
-        host: 'http://localhost:4943', // For local development
+        host: host,
+        timeout: 50000
       });
 
       if (!connected) {
         throw new Error('Plug wallet connection denied');
       }
 
+      // For local development, handle root key carefully
+      if (isLocal) {
+        try {
+          // Check if fetchRootKey method exists before calling it
+          if (window.ic.plug.agent && typeof window.ic.plug.agent.fetchRootKey === 'function') {
+            await window.ic.plug.agent.fetchRootKey();
+            console.log('Successfully fetched root key for local development');
+          } else {
+            console.warn('fetchRootKey method not available on Plug agent - this is normal for some Plug versions');
+          }
+        } catch (rootKeyError) {
+          // This is not fatal - many local setups work without explicit root key fetching
+          console.warn('Could not fetch root key for local development (this may be normal):', rootKeyError.message);
+        }
+      }
+
+      const principal = await window.ic.plug.agent.getPrincipal();
+      console.log('Plug wallet connected successfully with principal:', principal.toText());
+
       return {
         agent: window.ic.plug.agent,
-        principal: await window.ic.plug.agent.getPrincipal(),
+        principal: principal,
         type: 'plug'
       };
     } catch (error) {
       console.error('Plug connection error:', error);
+      
+      // Provide more specific error messages
+      if (error.message.includes('not implemented')) {
+        throw new Error('Plug wallet method not supported in local development. Please try Internet Identity or deploy to mainnet.');
+      } else if (error.message.includes('timeout')) {
+        throw new Error('Plug wallet connection timed out. Please try again.');
+      } else if (error.message.includes('denied')) {
+        throw new Error('Plug wallet connection was denied. Please approve the connection request.');
+      }
+      
       throw error;
     }
   },
@@ -124,11 +161,14 @@ export const MultiWalletAuthProvider = ({ children }) => {
       
       if (savedWalletType === 'plug' && WalletManager.isPlugAvailable()) {
         try {
+          console.log('Attempting to restore Plug connection...');
           const plugConnection = await WalletManager.connectPlug(getCanisterId());
           await initializeWithCustomAgent(plugConnection.agent, plugConnection.principal, 'plug');
+          console.log('Plug connection restored successfully');
           return;
         } catch (error) {
-          console.log('Stored Plug connection failed, falling back to Internet Identity');
+          console.warn('Stored Plug connection failed:', error.message);
+          // Don't throw here, just fall back to Internet Identity
           localStorage.removeItem('karbyn_wallet_type');
         }
       }
@@ -294,13 +334,31 @@ export const MultiWalletAuthProvider = ({ children }) => {
 
   const loginWithPlug = async () => {
     try {
+      console.log('Attempting Plug wallet connection...');
+      
+      // Check if Plug is available
+      if (!window.ic?.plug) {
+        throw new Error('Plug wallet extension not detected. Please install Plug wallet.');
+      }
+
       const plugConnection = await WalletManager.connectPlug(getCanisterId());
       localStorage.setItem('karbyn_wallet_type', 'plug');
       await initializeWithCustomAgent(plugConnection.agent, plugConnection.principal, 'plug');
+      console.log('Plug wallet connected successfully');
       return true;
     } catch (error) {
       console.error('Plug login failed:', error);
-      throw new Error('Failed to connect with Plug wallet. Please make sure Plug is installed and try again.');
+      
+      // Provide specific error messages
+      if (error.message.includes('fetchRootKey')) {
+        throw new Error('Local development setup issue with Plug wallet. Please try Internet Identity instead.');
+      } else if (error.message.includes('denied')) {
+        throw new Error('Plug wallet connection was denied. Please approve the connection.');
+      } else if (error.message.includes('not detected')) {
+        throw new Error('Plug wallet not found. Please install Plug wallet extension.');
+      } else {
+        throw new Error('Failed to connect with Plug wallet. Please try again or use Internet Identity.');
+      }
     }
   };
 

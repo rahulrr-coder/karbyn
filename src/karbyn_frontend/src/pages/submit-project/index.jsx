@@ -13,7 +13,7 @@ import ProgressIndicator from './components/ProgressIndicator';
 import LocationSelector from './components/LocationSelector';
 import SuccessModal from './components/SuccessModal';
 import TestDataLoader from './components/TestDataLoader';
-import { submitProject } from '../../api/projectApi';
+// import { submitProject } from '../../api/projectApi'; // Commented out for MVP demo
 
 const SubmitProject = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -80,7 +80,34 @@ const SubmitProject = () => {
     if (savedDraft) {
       try {
         const parsedDraft = JSON.parse(savedDraft);
-        setFormData(parsedDraft);
+        // Ensure all required sections exist with proper defaults
+        const mergedFormData = {
+          basics: {
+            name: '',
+            type: '',
+            region: '',
+            location: '',
+            description: '',
+            carbonImpact: '',
+            latitude: '',
+            longitude: '',
+            ...parsedDraft.basics
+          },
+          impact: {
+            standard: '',
+            monitoringFrequency: '',
+            measurementTools: [],
+            photos: [],
+            certificates: [],
+            ...parsedDraft.impact
+          },
+          review: {
+            acceptedTerms: false,
+            acceptedPrivacy: false,
+            ...parsedDraft.review
+          }
+        };
+        setFormData(mergedFormData);
       } catch (error) {
         console.error('Error loading saved draft:', error);
       }
@@ -88,47 +115,71 @@ const SubmitProject = () => {
   }, []);
 
   const updateFormData = (section, data) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: data
-    }));
+    setFormData(prev => {
+      // Ensure the section exists before updating
+      const currentSection = prev[section] || {};
+      return {
+        ...prev,
+        [section]: { ...currentSection, ...data }
+      };
+    });
     
     // Clear errors for this section
     setErrors(prev => {
       const newErrors = { ...prev };
-      Object.keys(data).forEach(key => {
-        delete newErrors[key];
-      });
+      if (data && typeof data === 'object') {
+        Object.keys(data).forEach(key => {
+          delete newErrors[key];
+        });
+      }
       return newErrors;
     });
   };
 
   const validateStep = (step) => {
     const newErrors = {};
+    
+    // Debug logging
+    console.log('Validating step:', step, 'FormData:', formData);
 
-    switch (step) {
-      case 1: // Project Basics
-        if (!formData.basics.name?.trim()) newErrors.name = 'Project name is required';
-        if (!formData.basics.type) newErrors.type = 'Project type is required';
-        if (!formData.basics.region) newErrors.region = 'Region is required';
-        if (!formData.basics.location?.trim()) newErrors.location = 'Specific location is required';
-        if (!formData.basics.description?.trim() || formData.basics.description.length < 50) {
-          newErrors.description = 'Description must be at least 50 characters';
-        }
-        if (!formData.basics.carbonImpact) newErrors.carbonImpact = 'Carbon impact estimate is required';
-        break;
+    try {
+      switch (step) {
+        case 1: // Project Basics
+          if (!formData.basics?.name?.trim()) newErrors.name = 'Project name is required';
+          if (!formData.basics?.type) newErrors.type = 'Project type is required';
+          if (!formData.basics?.region) newErrors.region = 'Region is required';
+          if (!formData.basics?.location?.trim()) newErrors.location = 'Specific location is required';
+          if (!formData.basics?.description?.trim() || formData.basics.description.length < 50) {
+            newErrors.description = 'Description must be at least 50 characters';
+          }
+          if (!formData.basics?.carbonImpact) newErrors.carbonImpact = 'Carbon impact estimate is required';
+          break;
 
-      case 2: // Impact Details
-        if (!formData.impact.standard) newErrors.standard = 'Carbon standard is required';
-        if (!formData.impact.monitoringFrequency) newErrors.monitoringFrequency = 'Monitoring frequency is required';
-        if (!formData.impact.measurementTools?.length === 0) newErrors.measurementTools = 'At least one measurement tool is required';
-        if (!formData.impact.photos?.length === 0) newErrors.photos = 'At least one project photo is required';
-        break;
+        case 2: // Impact Details
+          // Ensure impact section exists
+          if (!formData.impact) {
+            console.error('Impact section is missing from formData');
+            newErrors.impact = 'Impact data is required';
+            break;
+          }
+          if (!formData.impact.standard) newErrors.standard = 'Carbon standard is required';
+          if (!formData.impact.monitoringFrequency) newErrors.monitoringFrequency = 'Monitoring frequency is required';
+          if (!formData.impact.measurementTools || formData.impact.measurementTools.length === 0) {
+            newErrors.measurementTools = 'At least one measurement tool is required';
+          }
+          if (!formData.impact.photos || formData.impact.photos.length === 0) {
+            newErrors.photos = 'At least one project photo is required';
+          }
+          break;
 
-      case 3: // Review & Submit
-        if (!formData.review.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms of service';
-        if (!formData.review.acceptedPrivacy) newErrors.acceptedPrivacy = 'You must accept the privacy policy';
-        break;
+        case 3: // Review & Submit
+          if (!formData.review?.acceptedTerms) newErrors.acceptedTerms = 'You must accept the terms of service';
+          if (!formData.review?.acceptedPrivacy) newErrors.acceptedPrivacy = 'You must accept the privacy policy';
+          break;
+      }
+    } catch (error) {
+      console.error('Error in validateStep:', error, 'Step:', step, 'FormData:', formData);
+      newErrors.validation = 'Validation error occurred. Please refresh and try again.';
     }
 
     setErrors(newErrors);
@@ -155,14 +206,18 @@ const SubmitProject = () => {
     }
 
     setIsSubmitting(true);
-    showToast('info', 'Submitting your project...', 10000);
+    showToast('info', 'Submitting your project...', 3000);
     
     try {
-      // Call the actual API
-      const response = await submitProject(formData);
+      // For MVP demo - simulate successful submission without backend call
+      console.log('Submitting project data:', formData);
       
-      // Set the project ID from the response
-      setSubmittedProjectId(response.projectId);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Generate a mock project ID
+      const mockProjectId = `PRJ-${Date.now().toString().slice(-6)}`;
+      setSubmittedProjectId(mockProjectId);
       
       // Clear saved draft
       localStorage.removeItem('karbyn-project-draft');
