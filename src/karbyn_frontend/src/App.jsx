@@ -1,18 +1,18 @@
 import React from "react";
 import Routes from "./Routes";
-import { MultiWalletAuthProvider } from "./contexts/MultiWalletAuthContext";
+import { SimpleAuthProvider } from "./contexts/SimpleAuthContext";
 import { ActivityProvider } from "./contexts/ActivityContext";
 import { NFTProvider } from "./contexts/NFTContext";
 
 function App() {
   return (
-    <MultiWalletAuthProvider>
+    <SimpleAuthProvider>
       <ActivityProvider>
         <NFTProvider>
           <Routes />
         </NFTProvider>
       </ActivityProvider>
-    </MultiWalletAuthProvider>
+    </SimpleAuthProvider>
   );
 }
 

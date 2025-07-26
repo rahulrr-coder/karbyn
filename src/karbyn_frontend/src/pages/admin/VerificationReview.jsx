@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/MultiWalletAuthContext';
+import { useAuth } from '../../contexts/SimpleAuthContext';
 import AIVerificationInterface from '../../components/verification/AIVerificationInterface';
 
 const VerificationReview = () => {

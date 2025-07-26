@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/SimpleAuthContext';
+import { useAuth } from '../contexts/SimpleAuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const Login = () => {
+function Login() {
   const { 
     connectWallet, 
     isAuthenticated, 
@@ -14,12 +14,10 @@ const Login = () => {
   const navigate = useNavigate();
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
-  const [rememberMe, setRememberMe] = useState(false); // Default to false for more relaxed UX
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Navigate to the page they were trying to access, or dashboard
       const redirectTo = localStorage.getItem('karbyn_redirect_after_login') || '/dashboard';
       localStorage.removeItem('karbyn_redirect_after_login');
       navigate(redirectTo);
@@ -32,31 +30,16 @@ const Login = () => {
     }
   }, [authError]);
 
-  // Ensure initial load completes within a reasonable time
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setInitialLoadComplete(true);
-    }, 3000); // Force enable buttons after 3 seconds
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Mark as ready when loading completes or after timeout
-  useEffect(() => {
-    if (!loading) {
-      setInitialLoadComplete(true);
-    }
-  }, [loading]);
-
   const handleQuickConnect = async (walletId) => {
     setIsConnecting(true);
     setError(null);
     
     try {
-      // Clear any existing timeout
-      console.log('Attempting to connect with wallet:', walletId);
+      if (rememberMe) {
+        localStorage.setItem('karbyn_preferred_wallet', walletId);
+      }
       
-      const success = await connectWallet(walletId, rememberMe);
+      const success = await connectWallet(walletId);
       if (!success) {
         setError('Connection failed. Please try again.');
       }
@@ -68,13 +51,9 @@ const Login = () => {
     }
   };
 
-  // Disable auto-connect to prevent interference
-  /*
-  // Auto-connect with preferred wallet if available
   useEffect(() => {
     const preferredWallet = localStorage.getItem('karbyn_preferred_wallet');
     if (preferredWallet && !isAuthenticated && !loading && !isConnecting) {
-      // Small delay to avoid immediate auto-connect
       const timer = setTimeout(() => {
         if (availableWallets.includes(preferredWallet)) {
           handleQuickConnect(preferredWallet);
@@ -83,15 +62,14 @@ const Login = () => {
       return () => clearTimeout(timer);
     }
   }, [availableWallets, isAuthenticated, loading, isConnecting]);
-  */
 
   const quickConnectOptions = [
     {
-      id: 'internet-identity',
+      id: 'ii',
       name: 'Internet Identity',
       icon: '🔐',
       description: 'Quick & Secure',
-      available: true, // Always available
+      available: availableWallets.includes('ii'),
       color: 'from-blue-500 to-blue-600'
     },
     {
@@ -99,7 +77,7 @@ const Login = () => {
       name: 'Plug Wallet',
       icon: '🔌',
       description: 'Browser Extension',
-      available: typeof window !== 'undefined' && window.ic && window.ic.plug,
+      available: availableWallets.includes('plug'),
       color: 'from-purple-500 to-purple-600',
       installUrl: 'https://plugwallet.ooo/'
     },
@@ -108,48 +86,30 @@ const Login = () => {
       name: 'Stoic Wallet',
       icon: '🏛️',
       description: 'Mobile Friendly',
-      available: typeof window !== 'undefined' && window.ic && window.ic.stoic,
+      available: availableWallets.includes('stoic'),
       color: 'from-green-500 to-green-600',
       installUrl: 'https://www.stoicwallet.com/'
     }
   ];
 
-  // Determine if buttons should be disabled
-  const buttonsDisabled = isConnecting || (!initialLoadComplete && loading);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center px-4">
-              <div className="w-full max-w-md">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <span className="text-2xl">🌱</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Continue tracking your carbon impact</p>
+      <div className="max-w-md w-full space-y-6">
+        <div className="text-center">
+          <div className="mx-auto h-16 w-16 bg-gradient-to-br from-green-500 to-blue-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <span className="text-white text-3xl">🌱</span>
           </div>
+          <h1 className="mt-4 text-3xl font-bold text-gray-900">
+            Welcome Back
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Continue tracking your carbon impact
+          </p>
+        </div>
 
-          {/* Loading State */}
-          {!initialLoadComplete && loading && (
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                <span className="text-sm">Initializing authentication...</span>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                <button 
-                  onClick={() => setInitialLoadComplete(true)}
-                  className="underline hover:text-gray-700"
-                >
-                  Click here if this takes too long
-                </button>
-              </p>
-            </div>
-          )}
-
-          {/* Error Message */}
+        <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <div className="flex items-center text-red-800 text-sm">
                 <span className="mr-2">⚠️</span>
                 {error}
@@ -162,20 +122,18 @@ const Login = () => {
               Choose Your Login Method
             </h2>
 
-            {/* Quick Connect Buttons */}
             {quickConnectOptions.map((wallet) => (
               <button
                 key={wallet.id}
                 onClick={() => wallet.available ? handleQuickConnect(wallet.id) : window.open(wallet.installUrl, '_blank')}
-                disabled={buttonsDisabled}
+                disabled={loading || isConnecting}
                 className={`
                   w-full flex items-center p-4 rounded-xl transition-all duration-200 transform hover:scale-105
                   ${wallet.available 
                     ? 'bg-gradient-to-r ' + wallet.color + ' text-white shadow-lg hover:shadow-xl' 
                     : 'bg-gray-100 text-gray-500 cursor-not-allowed'
                   }
-                  ${buttonsDisabled ? 'opacity-60 cursor-wait' : ''}
-                  disabled:transform-none disabled:hover:scale-100
+                  ${(loading || isConnecting) ? 'opacity-60 cursor-wait' : ''}
                 `}
               >
                 <div className="text-2xl mr-3">{wallet.icon}</div>
@@ -195,7 +153,6 @@ const Login = () => {
               </button>
             ))}
 
-            {/* Remember Me */}
             <div className="flex items-center justify-center mt-6">
               <label className="flex items-center space-x-2 text-sm text-gray-600">
                 <input
@@ -210,7 +167,6 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Help Text */}
         <div className="text-center">
           <p className="text-sm text-gray-500">
             No account needed • Connect once, use everywhere • Your data stays private
@@ -219,6 +175,6 @@ const Login = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Login;

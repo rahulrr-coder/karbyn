@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/MultiWalletAuthContext';
+import { useAuth } from '../../contexts/SimpleAuthContext';
 import { useActivity } from '../../contexts/ActivityContext';
 import EnhancedAIVerification from '../../components/verification/EnhancedAIVerification';
 import biometricService from '../../services/biometricService';
@@ -8,7 +8,7 @@ import ActivityShare from '../../components/social/ActivityShare';
 import ImpactCertificate from '../../components/social/ImpactCertificate';
 
 const SubmitActivity = () => {
-  const { submitActivity, activityTypes, loading } = useActivity();
+  const { submitActivity, activityTypes, loading, stats } = useActivity();
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   
@@ -161,6 +161,26 @@ const SubmitActivity = () => {
       return;
     }
 
+    // Calculate carbon offset locally before submission
+    const calculateLocalCarbonOffset = () => {
+      const currentConfig = activityTypes[formData.type]?.[formData.subtype];
+      if (!currentConfig) return 0;
+      
+      let carbonOffset = 0;
+      if (currentConfig.carbonPerKm && formData.distance) {
+        carbonOffset = parseFloat(formData.distance) * currentConfig.carbonPerKm;
+      } else if (currentConfig.carbonPerItem && formData.quantity) {
+        carbonOffset = parseInt(formData.quantity) * currentConfig.carbonPerItem;
+      } else if (currentConfig.carbonPerHour && formData.duration) {
+        carbonOffset = parseFloat(formData.duration) * currentConfig.carbonPerHour;
+      } else if (currentConfig.carbonSaved) {
+        carbonOffset = currentConfig.carbonSaved;
+      }
+      return Math.round(carbonOffset * 100) / 100; // Round to 2 decimal places
+    };
+
+    const calculatedCarbonOffset = calculateLocalCarbonOffset();
+
     const result = await submitActivity({
       ...formData,
       distance: formData.distance ? parseFloat(formData.distance) : null,
@@ -173,6 +193,8 @@ const SubmitActivity = () => {
     if (result.success) {
       setSubmissionResult({
         ...result.activity,
+        carbonOffset: calculatedCarbonOffset.toFixed(1), // Use calculated carbon offset
+        calculated_carbon_offset: calculatedCarbonOffset, // Backend format
         aiVerified: aiVerificationResult ? aiVerificationResult.success : false
       });
       setStep(4);
@@ -254,38 +276,114 @@ const SubmitActivity = () => {
         </div>
 
         {step === 1 && (
-          <div className="bg-card rounded-lg organic-shadow-subtle p-6 border border-border">
-            <h2 className="text-xl font-semibold text-foreground mb-6">Choose Activity Type</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(activityTypes).map(([typeKey, typeData]) => (
-                <div key={typeKey} className="space-y-3">
-                  <h3 className="font-medium text-foreground capitalize">{typeKey}</h3>
-                  <div className="grid gap-2">
-                    {Object.entries(typeData).map(([subtypeKey, subtypeData]) => (
-                      <button
-                        key={subtypeKey}
-                        onClick={() => {
-                          setFormData(prev => ({ ...prev, type: typeKey, subtype: subtypeKey }));
-                          setStep(2);
-                        }}
-                        className="flex items-center p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 organic-transition text-left"
-                      >
-                        <span className="text-2xl mr-3">{subtypeData.icon}</span>
-                        <div>
-                          <div className="font-medium text-foreground">{subtypeData.name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {subtypeData.carbonPerKm && `${subtypeData.carbonPerKm} kg CO2/km`}
-                            {subtypeData.carbonPerItem && `${subtypeData.carbonPerItem} kg CO2/item`}
-                            {subtypeData.carbonPerHour && `${subtypeData.carbonPerHour} kg CO2/hour`}
-                            {subtypeData.carbonSaved && `${subtypeData.carbonSaved} kg CO2 saved`}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+          <div className="space-y-6">
+            {/* Quick Templates for Frequent Activities */}
+            <div className="bg-card rounded-lg organic-shadow-subtle p-6 border border-border">
+              <h2 className="text-xl font-semibold text-foreground mb-4">Quick Templates</h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Use these templates for common carbon activities to log faster
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      type: 'transport',
+                      subtype: 'walking',
+                      description: 'Walked instead of driving',
+                      distance: '2',
+                      location: 'Local area'
+                    }));
+                    setStep(2);
+                  }}
+                  className="p-4 bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200 rounded-lg hover:from-green-100 hover:to-blue-100 transition-all duration-200 text-left group"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🚶</span>
+                    <span className="font-medium text-green-800">Quick Walk</span>
                   </div>
-                </div>
-              ))}
+                  <p className="text-sm text-green-600">2km walk instead of driving</p>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      type: 'transport',
+                      subtype: 'cycling',
+                      description: 'Biked to work/errands',
+                      distance: '5',
+                      location: 'Local area'
+                    }));
+                    setStep(2);
+                  }}
+                  className="p-4 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg hover:from-blue-100 hover:to-purple-100 transition-all duration-200 text-left group"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">🚴</span>
+                    <span className="font-medium text-blue-800">Bike Commute</span>
+                  </div>
+                  <p className="text-sm text-blue-600">5km bike ride instead of driving</p>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      type: 'recycling',
+                      subtype: 'plastic',
+                      description: 'Recycled plastic bottles and containers',
+                      quantity: '5',
+                      location: 'Home'
+                    }));
+                    setStep(2);
+                  }}
+                  className="p-4 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-200 rounded-lg hover:from-purple-100 hover:to-pink-100 transition-all duration-200 text-left group"
+                >
+                  <div className="flex items-center mb-2">
+                    <span className="text-2xl mr-3">♻️</span>
+                    <span className="font-medium text-purple-800">Quick Recycle</span>
+                  </div>
+                  <p className="text-sm text-purple-600">5 plastic items recycled</p>
+                </button>
+              </div>
+            </div>
+
+            {/* Full Activity Type Selection */}
+            <div className="bg-card rounded-lg organic-shadow-subtle p-6 border border-border">
+              <h2 className="text-xl font-semibold text-foreground mb-6">Or Choose Activity Type</h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {Object.entries(activityTypes).map(([typeKey, typeData]) => (
+                  <div key={typeKey} className="space-y-3">
+                    <h3 className="font-medium text-foreground capitalize">{typeKey}</h3>
+                    <div className="grid gap-2">
+                      {Object.entries(typeData).map(([subtypeKey, subtypeData]) => (
+                        <button
+                          key={subtypeKey}
+                          onClick={() => {
+                            setFormData(prev => ({ ...prev, type: typeKey, subtype: subtypeKey }));
+                            setStep(2);
+                          }}
+                          className="flex items-center p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 organic-transition text-left"
+                        >
+                          <span className="text-2xl mr-3">{subtypeData.icon}</span>
+                          <div>
+                            <div className="font-medium text-foreground">{subtypeData.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {subtypeData.carbonPerKm && `${subtypeData.carbonPerKm} kg CO2/km`}
+                              {subtypeData.carbonPerItem && `${subtypeData.carbonPerItem} kg CO2/item`}
+                              {subtypeData.carbonPerHour && `${subtypeData.carbonPerHour} kg CO2/hour`}
+                              {subtypeData.carbonSaved && `${subtypeData.carbonSaved} kg CO2 saved`}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -689,7 +787,7 @@ const SubmitActivity = () => {
             </div>
             
             <ImpactCertificate 
-              carbonOffset={submissionResult.carbonOffset || 0}
+              carbonOffset={parseFloat(submissionResult.carbonOffset) || 0}
               activityCount={1}
               badges={submissionResult.badges || []}
               timeframe="activity"

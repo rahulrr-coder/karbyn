@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '../contexts/MultiWalletAuthContext';
+import { useAuth } from '../contexts/SimpleAuthContext';
 import { useActivity } from '../contexts/ActivityContext';
 import { useNFT } from '../contexts/NFTContext';
 import { Link } from 'react-router-dom';
@@ -11,32 +11,33 @@ const Dashboard = () => {
 
   const quickActions = [
     {
-      title: 'Log Activity',
-      description: 'Record your daily eco-actions',
-      icon: '📝',
+      title: 'Record Carbon Activity',
+      description: 'Log your eco-actions quickly',
+      icon: '🌱',
       link: '/activities/submit',
-      color: 'bg-primary'
+      color: 'bg-green-500',
+      highlight: true
+    },
+    {
+      title: 'Activity History',
+      description: 'View your carbon impact timeline',
+      icon: '�',
+      link: '/activities/history',
+      color: 'bg-blue-500'
     },
     {
       title: 'Browse Marketplace',
       description: 'Discover carbon credit NFTs',
       icon: '🛒',
       link: '/marketplace',
-      color: 'bg-accent'
-    },
-    {
-      title: 'Submit Project',
-      description: 'Register an ecological project',
-      icon: '🌳',
-      link: '/submit-project',
-      color: 'bg-secondary'
+      color: 'bg-purple-500'
     },
     {
       title: 'My NFTs',
       description: 'View your carbon credit collection',
       icon: '🏆',
       link: '/marketplace/my-nfts',
-      color: 'bg-primary/80'
+      color: 'bg-orange-500'
     }
   ];
 
@@ -99,7 +100,7 @@ const Dashboard = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-muted-foreground">Carbon Offset</p>
-                <p className="text-2xl font-bold text-foreground">{stats.totalCarbonOffset} kg</p>
+                <p className="text-2xl font-bold text-foreground">{(Math.round(stats.totalCarbonOffset * 100) / 100).toFixed(2)} kg</p>
               </div>
             </div>
           </div>
@@ -137,13 +138,24 @@ const Dashboard = () => {
               <Link
                 key={index}
                 to={action.link}
-                className="bg-card rounded-lg organic-shadow-subtle p-6 border border-border hover:organic-shadow-moderate organic-transition group"
+                className={`rounded-lg p-6 border transition-all duration-200 group ${
+                  action.highlight 
+                    ? 'bg-gradient-to-br from-green-50 to-blue-50 border-green-200 hover:from-green-100 hover:to-blue-100 hover:shadow-lg transform hover:scale-105' 
+                    : 'bg-card border-border hover:shadow-md hover:scale-102'
+                }`}
               >
-                <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-4 group-hover:scale-105 organic-transition`}>
-                  <span className="text-2xl">{action.icon}</span>
+                <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-4 group-hover:scale-105 transition-transform ${
+                  action.highlight ? 'shadow-md' : ''
+                }`}>
+                  <span className="text-2xl text-white">{action.icon}</span>
                 </div>
-                <h4 className="font-semibold text-foreground mb-2">{action.title}</h4>
-                <p className="text-sm text-muted-foreground">{action.description}</p>
+                <h4 className={`font-semibold mb-2 ${action.highlight ? 'text-green-800' : 'text-foreground'}`}>
+                  {action.title}
+                  {action.highlight && <span className="ml-2 text-green-600">⚡</span>}
+                </h4>
+                <p className={`text-sm ${action.highlight ? 'text-green-600' : 'text-muted-foreground'}`}>
+                  {action.description}
+                </p>
               </Link>
             ))}
           </div>
@@ -224,6 +236,18 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Action Button for Quick Carbon Logging */}
+      <Link
+        to="/activities/submit"
+        className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-white text-2xl transform hover:scale-110 transition-all duration-200 z-50 group"
+        title="Quick Log Carbon Activity"
+      >
+        🌱
+        <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs font-bold animate-pulse">
+          +
+        </div>
+      </Link>
     </div>
   );
 };

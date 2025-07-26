@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/MultiWalletAuthContext';
+import { useAuth } from '../../contexts/SimpleAuthContext';
 import Icon from '../../components/AppIcon';
 
 const BusinessPartnership = () => {

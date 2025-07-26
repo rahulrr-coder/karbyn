@@ -74,6 +74,26 @@ const SubmitProject = () => {
     setToast(prev => ({ ...prev, visible: false }));
   };
 
+  // Calculate carbon offset based on activity type and quantity
+  const calculateCarbonOffset = (activityType, quantity) => {
+    if (!activityType || !quantity || quantity <= 0) return 0;
+    
+    const activityTypeNormalized = activityType.toLowerCase();
+    const offsetMappings = {
+      'walk': 0.25,           // kg per km
+      'bike ride': 0.25,      // kg per km  
+      'plastic recycled': 0.1, // kg per item
+      'led light usage': 0.05, // kg per hour
+      'carpool': 0.2,         // kg per km
+      'tree planted': 21,     // kg per tree
+      'clothes swapped': 2.5   // kg per item
+    };
+
+    const offsetRate = offsetMappings[activityTypeNormalized] || 0;
+    const calculatedOffset = offsetRate * quantity;
+    return Math.round(calculatedOffset * 100) / 100; // Round to 2 decimal places
+  };
+
   // Load saved draft on mount
   useEffect(() => {
     const savedDraft = localStorage.getItem('karbyn-project-draft');
@@ -209,8 +229,23 @@ const SubmitProject = () => {
     showToast('info', 'Submitting your project...', 3000);
     
     try {
+      // Calculate carbon offset based on project type and carbon impact
+      const estimatedOffsetKg = calculateCarbonOffset(
+        formData.basics?.type || '', 
+        parseFloat(formData.basics?.carbonImpact) || 0
+      );
+
+      // Prepare submission payload with calculated offset
+      const submissionPayload = {
+        ...formData,
+        estimated_offset_kg: estimatedOffsetKg,
+        submission_timestamp: new Date().toISOString(),
+        calculated_at: new Date().toISOString()
+      };
+
       // For MVP demo - simulate successful submission without backend call
-      console.log('Submitting project data:', formData);
+      console.log('Submitting project data:', submissionPayload);
+      console.log(`Calculated carbon offset: ${estimatedOffsetKg} kg CO2`);
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 2000));
@@ -224,7 +259,7 @@ const SubmitProject = () => {
       
       // Show success toast and modal
       hideToast();
-      showToast('success', 'Project submitted successfully!', 5000);
+      showToast('success', `Project submitted successfully! Estimated offset: ${estimatedOffsetKg} kg CO2`, 5000);
       setShowSuccessModal(true);
       
     } catch (error) {

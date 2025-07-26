@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/MultiWalletAuthContext';
+import { useAuth } from '../../contexts/SimpleAuthContext';
 import biometricService from '../../services/biometricService';
 import BiometricRegistration from '../verification/BiometricRegistration';
 import { User, Shield, Eye, Calendar, TrendingUp, Download, Upload, Settings } from 'lucide-react';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/MultiWalletAuthContext';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/SimpleAuthContext';
 import Icon from '../AppIcon';
 
 const Header = () => {
@@ -70,7 +70,7 @@ const Header = () => {
         <div className="w-full px-4 lg:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/landing-page" className="flex-shrink-0">
+            <Link to="/" className="flex-shrink-0">
               <Logo />
             </Link>
 
@@ -99,21 +99,45 @@ const Header = () => {
               <div className="flex items-center space-x-3 ml-6 pl-6 border-l border-border">
                 {isAuthenticated ? (
                   <div className="flex items-center space-x-3">
-                    <span className="text-xs text-muted-foreground">
-                      {principal?.slice(0, 6)}...{principal?.slice(-4)}
-                    </span>
-                    <button
-                      onClick={logout}
-                      disabled={loading}
-                      className="px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground organic-transition"
-                    >
-                      Logout
-                    </button>
+                    <div className="flex items-center space-x-2 px-3 py-1.5 bg-green-50 rounded-lg">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-xs text-green-700 font-medium">Connected</span>
+                    </div>
+                    <div className="relative group">
+                      <button className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-bold">
+                            {principal?.slice(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                        <Icon name="ChevronDown" size={14} />
+                      </button>
+                      
+                      {/* Dropdown Menu */}
+                      <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div className="p-3 border-b border-gray-100">
+                          <p className="text-xs text-gray-500">Wallet Address</p>
+                          <p className="text-sm font-mono text-gray-700 truncate">
+                            {principal}
+                          </p>
+                        </div>
+                        <div className="p-1">
+                          <button
+                            onClick={logout}
+                            disabled={loading}
+                            className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                          >
+                            <Icon name="LogOut" size={16} />
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <Link
-                    to="/auth/login"
-                    className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 organic-transition disabled:opacity-50"
+                    to="/login"
+                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg text-sm font-medium hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
                   >
                     <Icon name="LogIn" size={16} />
                     <span>Sign In</span>
@@ -202,7 +226,7 @@ const Header = () => {
                     </div>
                   ) : (
                     <Link
-                      to="/auth/login"
+                      to="/login"
                       onClick={closeMobileMenu}
                       className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 organic-transition"
                     >

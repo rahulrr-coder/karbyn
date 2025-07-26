@@ -1,6 +1,6 @@
 import React from 'react';
 import { useActivity } from '../../contexts/ActivityContext';
-import { useAuth } from '../../contexts/MultiWalletAuthContext';
+import { useAuth } from '../../contexts/SimpleAuthContext';
 import { Link } from 'react-router-dom';
 
 const ActivityHistory = () => {

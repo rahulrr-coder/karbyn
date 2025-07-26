@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './MultiWalletAuthContext';
+import { useAuth } from './SimpleAuthContext';
 
 const NFTContext = createContext();
 

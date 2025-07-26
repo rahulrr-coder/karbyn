@@ -22,6 +22,14 @@ export const useAuth = () => {
   return context;
 };
 
+// Simple backend setup function
+const setBackend = (actor) => {
+  if (actor) {
+    KarbynBackendService.setActor(actor);
+    console.log('Backend actor set successfully');
+  }
+};
+
 // Wallet detection and management
 const WalletManager = {
   // Check if Plug wallet is available
@@ -34,7 +42,7 @@ const WalletManager = {
     return typeof window !== 'undefined' && window.ic && window.ic.stoic;
   },
 
-  // Connect to Plug wallet
+  // Connect to Plug wallet with improved error handling
   connectPlug: async (canisterId) => {
     if (!WalletManager.isPlugAvailable()) {
       throw new Error('Plug wallet not found. Please install Plug wallet extension.');
@@ -47,6 +55,8 @@ const WalletManager = {
                      window.location.hostname === '127.0.0.1';
       
       const host = isLocal ? 'http://localhost:4943' : 'https://ic0.app';
+      
+      console.log('Attempting Plug wallet connection with host:', host);
 
       const connected = await window.ic.plug.requestConnect({
         whitelist: [canisterId],
@@ -66,11 +76,21 @@ const WalletManager = {
             await window.ic.plug.agent.fetchRootKey();
             console.log('Successfully fetched root key for local development');
           } else {
-            console.warn('fetchRootKey method not available on Plug agent - this is normal for some Plug versions');
+            console.warn('fetchRootKey method not available on Plug agent - using alternative approach');
+            // Alternative: Set the agent to use insecure local development
+            if (window.ic.plug.agent && window.ic.plug.agent.rootKey === undefined) {
+              // For local development, we can work without root key
+              console.log('Working without root key for local development');
+            }
           }
         } catch (rootKeyError) {
-          // This is not fatal - many local setups work without explicit root key fetching
+          // This is not fatal - continue without root key for local development
           console.warn('Could not fetch root key for local development (this may be normal):', rootKeyError.message);
+          
+          // Don't throw error - just continue
+          if (rootKeyError.message.includes('not implemented')) {
+            console.log('fetchRootKey not implemented - continuing with local development setup');
+          }
         }
       }
 
@@ -86,8 +106,28 @@ const WalletManager = {
       console.error('Plug connection error:', error);
       
       // Provide more specific error messages
-      if (error.message.includes('not implemented')) {
-        throw new Error('Plug wallet method not supported in local development. Please try Internet Identity or deploy to mainnet.');
+      if (error.message.includes('not implemented') || error.message.includes('fetchRootKey')) {
+        // For local development, this is often not a fatal error
+        console.warn('Plug wallet fetchRootKey issue in local development - attempting to continue...');
+        
+        // Try to continue without root key if we have a connection
+        if (window.ic.plug && window.ic.plug.agent) {
+          try {
+            const principal = await window.ic.plug.agent.getPrincipal();
+            console.log('Plug wallet connected successfully with principal (without root key):', principal.toText());
+            
+            return {
+              agent: window.ic.plug.agent,
+              principal: principal,
+              type: 'plug'
+            };
+          } catch (principalError) {
+            console.error('Could not get principal from Plug wallet:', principalError);
+            throw new Error('Local development setup issue with Plug wallet. Please try Internet Identity instead.');
+          }
+        }
+        
+        throw new Error('Local development setup issue with Plug wallet. Please try Internet Identity instead.');
       } else if (error.message.includes('timeout')) {
         throw new Error('Plug wallet connection timed out. Please try again.');
       } else if (error.message.includes('denied')) {
@@ -149,17 +189,107 @@ export const MultiWalletAuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    initAuth();
+    // Only initialize basic auth client, don't auto-connect to wallets
+    initBasicAuth();
   }, []);
+
+  const initBasicAuth = async () => {
+    try {
+      console.log('Initializing basic auth...');
+      
+      // Only create AuthClient for Internet Identity, don't auto-connect to wallets
+      const client = await AuthClient.create({
+        idleOptions: {
+          idleTimeout: 1000 * 60 * 30, // 30 minutes
+          disableDefaultIdleCallback: true,
+        },
+      });
+
+      setAuthClient(client);
+      console.log('AuthClient created successfully');
+
+      // Check if Internet Identity is already authenticated (but don't auto-connect to wallets)
+      const isAuthenticated = await client.isAuthenticated();
+      console.log('Internet Identity authentication status:', isAuthenticated);
+      
+      if (isAuthenticated) {
+        const identity = client.getIdentity();
+        setIdentity(identity);
+        setIsAuthenticated(true);
+        setWalletType('internet-identity');
+        setPrincipal(identity.getPrincipal().toString());
+        console.log('Internet Identity restored:', identity.getPrincipal().toString());
+        
+        // Create actor with authenticated identity
+        const actorOptions = {
+          agentOptions: { 
+            identity,
+            host: import.meta.env.MODE === 'development' ? 'http://localhost:4943' : 'https://ic0.app'
+          },
+        };
+        
+        const authenticatedActor = createActor(getCanisterId(), actorOptions);
+        
+        // For local development, ensure root key is fetched
+        if (import.meta.env.MODE === 'development') {
+          try {
+            await authenticatedActor.agent.fetchRootKey();
+          } catch (error) {
+            console.warn('Could not fetch root key (this is normal for local development):', error.message);
+          }
+        }
+        
+        setBackend(authenticatedActor);
+        KarbynBackendService.setActor(authenticatedActor);
+      } else {
+        // Create anonymous actor for unauthenticated users
+        const actorOptions = import.meta.env.MODE === 'development' ? {
+          agentOptions: {
+            host: 'http://localhost:4943',
+            verifyQuerySignatures: false
+          }
+        } : {};
+        
+        const anonymousActor = createActor(getCanisterId(), actorOptions);
+        setBackend(anonymousActor);
+        console.log('Anonymous actor created');
+      }
+
+      console.log('Basic auth initialization complete');
+    } catch (error) {
+      console.error('Error during basic auth initialization:', error);
+      
+      // Create fallback anonymous actor
+      try {
+        const actorOptions = import.meta.env.MODE === 'development' ? {
+          agentOptions: {
+            host: 'http://localhost:4943',
+            verifyQuerySignatures: false
+          }
+        } : {};
+        
+        const fallbackActor = createActor(getCanisterId(), actorOptions);
+        setBackend(fallbackActor);
+        console.log('Fallback anonymous actor created');
+      } catch (fallbackError) {
+        console.error('Failed to create fallback actor:', fallbackError);
+      }
+    } finally {
+      // Always set loading to false when basic auth initialization completes
+      setIsLoading(false);
+    }
+  };
 
   const initAuth = async () => {
     try {
       console.log('Initializing auth...');
       
-      // Check for existing wallet connections
+      // Check for existing wallet connections ONLY if user previously connected
       const savedWalletType = localStorage.getItem('karbyn_wallet_type');
+      const autoConnectEnabled = localStorage.getItem('karbyn_auto_connect') === 'true';
       
-      if (savedWalletType === 'plug' && WalletManager.isPlugAvailable()) {
+      // Only auto-connect if explicitly enabled by user
+      if (autoConnectEnabled && savedWalletType === 'plug' && WalletManager.isPlugAvailable()) {
         try {
           console.log('Attempting to restore Plug connection...');
           const plugConnection = await WalletManager.connectPlug(getCanisterId());
@@ -170,10 +300,11 @@ export const MultiWalletAuthProvider = ({ children }) => {
           console.warn('Stored Plug connection failed:', error.message);
           // Don't throw here, just fall back to Internet Identity
           localStorage.removeItem('karbyn_wallet_type');
+          localStorage.removeItem('karbyn_auto_connect');
         }
       }
 
-      if (savedWalletType === 'stoic' && WalletManager.isStoicAvailable()) {
+      if (autoConnectEnabled && savedWalletType === 'stoic' && WalletManager.isStoicAvailable()) {
         try {
           const stoicConnection = await WalletManager.connectStoic(getCanisterId());
           await initializeWithCustomAgent(stoicConnection.agent, stoicConnection.principal, 'stoic');
@@ -181,6 +312,7 @@ export const MultiWalletAuthProvider = ({ children }) => {
         } catch (error) {
           console.log('Stored Stoic connection failed, falling back to Internet Identity');
           localStorage.removeItem('karbyn_wallet_type');
+          localStorage.removeItem('karbyn_auto_connect');
         }
       }
 
@@ -205,10 +337,26 @@ export const MultiWalletAuthProvider = ({ children }) => {
         setWalletType('internet-identity');
         console.log('User identity:', identity.getPrincipal().toString());
         
-        // Create actor with authenticated identity
-        const authenticatedActor = createActor(getCanisterId(), {
-          agentOptions: { identity },
-        });
+        // Create actor with authenticated identity and proper local development handling
+        const actorOptions = {
+          agentOptions: { 
+            identity,
+            host: import.meta.env.MODE === 'development' ? 'http://localhost:4943' : 'https://ic0.app'
+          },
+        };
+        
+        const authenticatedActor = createActor(getCanisterId(), actorOptions);
+        
+        // For local development, ensure root key is fetched
+        if (import.meta.env.MODE === 'development') {
+          try {
+            await authenticatedActor.agent?.fetchRootKey?.();
+            console.log('Root key fetched for local development');
+          } catch (error) {
+            console.warn('Could not fetch root key (this might be normal):', error.message);
+          }
+        }
+        
         setActor(authenticatedActor);
         
         // Set the actor in the backend service
@@ -218,8 +366,25 @@ export const MultiWalletAuthProvider = ({ children }) => {
         // Get user data from backend
         await loadUserData(authenticatedActor, identity);
       } else {
-        // Create anonymous actor for public operations
-        const anonymousActor = createActor(getCanisterId());
+        // Create anonymous actor for public operations with proper local development handling
+        const actorOptions = import.meta.env.MODE === 'development' ? {
+          agentOptions: {
+            host: 'http://localhost:4943'
+          }
+        } : {};
+        
+        const anonymousActor = createActor(getCanisterId(), actorOptions);
+        
+        // For local development, ensure root key is fetched for anonymous actor too
+        if (import.meta.env.MODE === 'development') {
+          try {
+            await anonymousActor.agent?.fetchRootKey?.();
+            console.log('Root key fetched for anonymous actor in local development');
+          } catch (error) {
+            console.warn('Could not fetch root key for anonymous actor (this might be normal):', error.message);
+          }
+        }
+        
         setActor(anonymousActor);
         KarbynBackendService.setActor(anonymousActor);
         console.log('Anonymous actor created');
@@ -312,19 +477,32 @@ export const MultiWalletAuthProvider = ({ children }) => {
   };
 
   // Multi-wallet login function
-  const loginWithWallet = async (walletId) => {
+  const loginWithWallet = async (walletId, rememberChoice = false) => {
     setIsLoading(true);
     
     try {
+      let result;
       switch (walletId) {
         case 'plug':
-          return await loginWithPlug();
+          result = await loginWithPlug(rememberChoice);
+          break;
         case 'stoic':
-          return await loginWithStoic();
+          result = await loginWithStoic(rememberChoice);
+          break;
         case 'internet-identity':
         default:
-          return await loginWithInternetIdentity();
+          result = await loginWithInternetIdentity(rememberChoice);
+          break;
       }
+      
+      // Only enable auto-connect if user explicitly chooses to remember
+      if (rememberChoice) {
+        localStorage.setItem('karbyn_auto_connect', 'true');
+      } else {
+        localStorage.removeItem('karbyn_auto_connect');
+      }
+      
+      return result;
     } catch (error) {
       console.error('Wallet login failed:', error);
       setIsLoading(false);
@@ -332,7 +510,7 @@ export const MultiWalletAuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithPlug = async () => {
+  const loginWithPlug = async (rememberChoice = false) => {
     try {
       console.log('Attempting Plug wallet connection...');
       
@@ -342,7 +520,12 @@ export const MultiWalletAuthProvider = ({ children }) => {
       }
 
       const plugConnection = await WalletManager.connectPlug(getCanisterId());
-      localStorage.setItem('karbyn_wallet_type', 'plug');
+      
+      // Only save wallet type if user wants to remember
+      if (rememberChoice) {
+        localStorage.setItem('karbyn_wallet_type', 'plug');
+      }
+      
       await initializeWithCustomAgent(plugConnection.agent, plugConnection.principal, 'plug');
       console.log('Plug wallet connected successfully');
       return true;
@@ -362,10 +545,14 @@ export const MultiWalletAuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithStoic = async () => {
+  const loginWithStoic = async (rememberChoice = false) => {
     try {
       const stoicConnection = await WalletManager.connectStoic(getCanisterId());
-      localStorage.setItem('karbyn_wallet_type', 'stoic');
+      
+      // Only save wallet type if user wants to remember
+      if (rememberChoice) {
+        localStorage.setItem('karbyn_wallet_type', 'stoic');
+      }
       await initializeWithCustomAgent(stoicConnection.agent, stoicConnection.principal, 'stoic');
       return true;
     } catch (error) {
@@ -374,7 +561,7 @@ export const MultiWalletAuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithInternetIdentity = async () => {
+  const loginWithInternetIdentity = async (rememberChoice = false) => {
     if (!authClient) {
       console.error('AuthClient not initialized');
       throw new Error('Authentication system not ready. Please try again.');
@@ -390,17 +577,22 @@ export const MultiWalletAuthProvider = ({ children }) => {
             console.log('Internet Identity login successful');
             setIsAuthenticated(true);
             setWalletType('internet-identity');
-            localStorage.setItem('karbyn_wallet_type', 'internet-identity');
+            
+            // Only save wallet type if user wants to remember
+            if (rememberChoice) {
+              localStorage.setItem('karbyn_wallet_type', 'internet-identity');
+            }
             
             const identity = authClient.getIdentity();
             setIdentity(identity);
+            setPrincipal(identity.getPrincipal().toString());
             console.log('Login identity:', identity.getPrincipal().toString());
             
             // Create authenticated actor
             const authenticatedActor = createActor(getCanisterId(), {
               agentOptions: { identity },
             });
-            setActor(authenticatedActor);
+            setBackend(authenticatedActor);
             KarbynBackendService.setActor(authenticatedActor);
 
             // Load user data
@@ -430,15 +622,24 @@ export const MultiWalletAuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // Clear stored wallet type
+      // Clear all stored authentication data
       localStorage.removeItem('karbyn_wallet_type');
+      localStorage.removeItem('karbyn_auto_connect');
       
       if (walletType === 'internet-identity' && authClient) {
         await authClient.logout();
       } else if (walletType === 'plug' && WalletManager.isPlugAvailable()) {
-        await window.ic.plug.disconnect();
+        try {
+          await window.ic.plug.disconnect();
+        } catch (error) {
+          console.warn('Plug disconnect failed:', error);
+        }
       } else if (walletType === 'stoic' && WalletManager.isStoicAvailable()) {
-        await window.ic.stoic.disconnect();
+        try {
+          await window.ic.stoic.disconnect();
+        } catch (error) {
+          console.warn('Stoic disconnect failed:', error);
+        }
       }
       
       // Clear state
@@ -446,11 +647,21 @@ export const MultiWalletAuthProvider = ({ children }) => {
       setUser(null);
       setIdentity(null);
       setWalletType(null);
+      setPrincipal(null);
       
       // Reset to anonymous actor
-      const anonymousActor = createActor(getCanisterId());
-      setActor(anonymousActor);
+      const actorOptions = import.meta.env.MODE === 'development' ? {
+        agentOptions: {
+          host: 'http://localhost:4943',
+          verifyQuerySignatures: false
+        }
+      } : {};
+      
+      const anonymousActor = createActor(getCanisterId(), actorOptions);
+      setBackend(anonymousActor);
       KarbynBackendService.setActor(anonymousActor);
+      
+      console.log('Logout completed successfully');
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
