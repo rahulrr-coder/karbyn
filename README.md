@@ -1,61 +1,177 @@
-# `karbyn`
+# 🌱 Karbyn - Carbon Offset Platform
 
-Welcome to your new `karbyn` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+**Democratizing carbon offset verification through blockchain technology**
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+Karbyn is a decentralized platform built on the Internet Computer that allows individuals, farmers, and NGOs to track, verify, and monetize their eco-friendly activities through carbon credits and NFTs.
 
-To learn more before you start working with `karbyn`, see the following documentation available online:
+## 🌍 The Problem We're Solving
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Rust Canister Development Guide](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [ic-cdk](https://docs.rs/ic-cdk)
-- [ic-cdk-macros](https://docs.rs/ic-cdk-macros)
-- [Candid Introduction](https://internetcomputer.org/docs/current/developer-docs/backend/candid/)
+**Climate action spans individuals to organizations, but verification is broken:**
+- Personal carbon-positive activities go unrecognized and unrewarded
+- Farmers lack access to carbon credit markets despite sustainable practices
+- NGOs struggle to monetize their environmental projects effectively
+- Traditional carbon offset markets are expensive and inaccessible
+- No standardized way to track and verify environmental impact across stakeholders
+- Lack of incentives for everyday eco-friendly behaviors and sustainable farming
 
-If you want to start working on your project right away, you might want to try the following commands:
+## 💡 Our Solution
+
+Karbyn creates a **transparent, accessible, and rewarding** ecosystem where:
+- **Track** your eco-activities (recycling, sustainable farming, renewable energy, conservation projects)
+- **Verify** activities through smart contracts and community validation
+- **Earn** carbon credit NFTs that represent real environmental impact
+- **Trade** your carbon credits in a decentralized marketplace
+- **Scale** from individual actions to large-scale agricultural and NGO projects
+
+## ✨ Key Features
+
+### 🔐 **Multi-Wallet Authentication**
+- Internet Identity integration for seamless Web3 access
+- Plug Wallet support for advanced users
+- Secure, passwordless authentication
+
+### 📊 **Activity Tracking & Verification**
+- Submit eco-activities with proof (photos, receipts, location data, field reports)
+- Smart contract-based carbon offset calculations
+- Real-time dashboard showing your environmental impact
+- Categories: Recycling, Transport, Energy, Agriculture, Conservation, Reforestation
+
+### 🏆 **NFT Carbon Credits**
+- Earn unique NFTs representing verified carbon offsets
+- Each NFT contains immutable proof of environmental impact
+- Tradeable on the integrated marketplace
+
+### 🛒 **Decentralized Marketplace**
+- Buy and sell carbon credit NFTs
+- Transparent pricing and impact metrics
+- Community-driven verification system
+
+### 📈 **Impact Dashboard**
+- Real-time carbon offset tracking (rounded to 2 decimal places)
+- Activity history and verification status
+- Personal environmental impact statistics
+- Weekly streaks and achievement system
+
+## 🚀 Getting Started
+
+### Prerequisites
+- [DFX SDK](https://internetcomputer.org/docs/current/developer-docs/setup/install) installed
+- Node.js 16+ and npm
+- Git
+
+### Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd karbyn
+   ```
+
+2. **Start the local Internet Computer replica**
+   ```bash
+   dfx start --background
+   ```
+
+3. **Deploy the canisters**
+   ```bash
+   dfx deploy --network local
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm start
+   ```
+
+5. **Open your browser**
+   - Frontend: `http://localhost:4943/?canisterId={frontend_canister_id}`
+   - Backend Candid UI: Check terminal output for the backend URL
+
+### Development Commands
 
 ```bash
-cd karbyn/
-dfx help
-dfx canister --help
-```
-
-## Running the project locally
-
-If you want to test your project locally, you can use the following commands:
-
-```bash
-# Starts the replica, running in the background
-dfx start --background
-
-# Deploys your canisters to the replica and generates your candid interface
-dfx deploy
-```
-
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
-
-If you have made changes to your backend canister, you can generate a new candid interface with
-
-```bash
+# Generate Candid interfaces
 npm run generate
+
+# Build the project
+npm run build
+
+# Deploy to local network
+dfx deploy --network local
+
+# Deploy to IC mainnet
+dfx deploy --network ic
 ```
 
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
+## 🏗️ Technical Architecture
 
-If you are making frontend changes, you can start a development server with
+- **Frontend**: React.js with Vite, TailwindCSS, and Framer Motion
+- **Backend**: Rust canisters on Internet Computer
+- **Authentication**: Internet Identity + Plug Wallet integration
+- **Storage**: Decentralized storage on IC
+- **Smart Contracts**: Candid interface for type-safe interactions
 
-```bash
-npm start
+## 🌟 Use Cases
+
+### 👤 Individual Users
+- Track daily eco-activities (cycling to work, recycling, solar energy use)
+- Earn carbon credits for verified activities
+- Build a verifiable record of environmental impact
+- Trade carbon credits for value
+
+### 🌾 Farmers & Agricultural Communities
+- Monetize sustainable farming practices (crop rotation, organic farming, soil carbon sequestration)
+- Earn credits for reforestation and afforestation projects
+- Access global carbon markets with transparent pricing
+- Verify and trade agricultural carbon offsets
+
+### 🏢 NGOs & Environmental Organizations
+- List large-scale environmental projects on the marketplace
+- Raise funds through pre-verified carbon credit sales
+- Provide transparent impact reporting to donors
+- Scale conservation efforts with decentralized funding
+
+### 🏢 Businesses & Organizations
+- Purchase verified carbon credits from individuals, farmers, and NGOs
+- Support community-driven environmental initiatives
+- Demonstrate corporate social responsibility with transparent offsets
+- Access real-time environmental impact data across all stakeholder types
+
+## 🔧 Project Structure
+
+```
+karbyn/
+├── src/
+│   ├── karbyn_backend/          # Rust backend canister
+│   └── karbyn_frontend/         # React frontend
+│       ├── src/
+│       │   ├── components/      # Reusable UI components
+│       │   ├── contexts/        # React contexts (Auth, Activity)
+│       │   ├── pages/          # Application pages
+│       │   ├── services/       # Backend integration services
+│       │   └── styles/         # CSS and styling
+│       └── public/             # Static assets
+├── dfx.json                    # DFX configuration
+└── README.md                   # This file
 ```
 
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
+## 🤝 Contributing
 
-### Note on frontend environment variables
+We welcome contributions! Please feel free to:
+- Report bugs and suggest features
+- Submit pull requests
+- Improve documentation
+- Share feedback and ideas
 
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
+## 📄 License
 
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🌱 Our Mission
+
+**Making carbon offset accessible, transparent, and rewarding for everyone - from individual actions to large-scale agricultural and conservation projects.**
+
+Join us in building a sustainable future where every eco-friendly action counts and gets rewarded, whether you're an individual recycling at home, a farmer implementing sustainable practices, or an NGO leading conservation efforts!
+
+---
+
+**Built with ❤️ on the Internet Computer**
