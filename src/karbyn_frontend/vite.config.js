@@ -2,8 +2,31 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 
+// Plugin to inject globals
+const injectGlobalsPlugin = () => ({
+  name: 'inject-globals',
+  transformIndexHtml: (html) => {
+    return html.replace(
+      '<head>',
+      `<head>
+        <script>
+          window.global = window.globalThis;
+          window.process = { env: {} };
+          // Simple Buffer polyfill
+          if (typeof Buffer === 'undefined') {
+            window.Buffer = {
+              isBuffer: function(obj) { return false; },
+              from: function(data) { return new Uint8Array(data); },
+              alloc: function(size) { return new Uint8Array(size); }
+            };
+          }
+        </script>`
+    );
+  }
+});
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), injectGlobalsPlugin()],
   optimizeDeps: {
     esbuildOptions: {
       define: {
@@ -33,24 +56,11 @@ export default defineConfig({
       // Mock segment analytics modules
       "@segment/analytics-next": resolve(__dirname, "src/mocks/analytics.js"),
       "@segment/analytics-core": resolve(__dirname, "src/mocks/analytics.js"),
-      "@segment/analytics-browser": resolve(__dirname, "src/mocks/analytics.js"),
-      // Mock problematic dependencies that cause build issues
-      "@metamask/sdk": resolve(__dirname, "src/mocks/metamask.js"),
-      "@walletconnect/utils": resolve(__dirname, "src/mocks/walletconnect-utils.js")
+      "@segment/analytics-browser": resolve(__dirname, "src/mocks/analytics.js")
     },
   },
   build: {
     rollupOptions: {
-      external: (id) => {
-        // Mark problematic dependencies as external to prevent bundling issues
-        if (id.includes('@metamask/sdk') || 
-            id.includes('@walletconnect/utils') ||
-            id.includes('@walletconnect/core') ||
-            id.includes('@walletconnect/sign-client')) {
-          return true;
-        }
-        return false;
-      },
       output: {
         manualChunks: {
           // Group related dependencies
@@ -58,12 +68,6 @@ export default defineConfig({
           web3auth: ['@web3auth/modal'],
           dfinity: ['@dfinity/agent', '@dfinity/auth-client', '@dfinity/candid', '@dfinity/identity', '@dfinity/principal']
         },
-        globals: {
-          '@metamask/sdk': 'MetaMaskSDK',
-          '@walletconnect/utils': 'WalletConnectUtils',
-          '@walletconnect/core': 'WalletConnectCore',
-          '@walletconnect/sign-client': 'WalletConnectSignClient'
-        }
       },
     },
     // Try to handle problematic dependencies

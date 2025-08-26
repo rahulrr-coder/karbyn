@@ -1,19 +1,13 @@
-// Simple polyfills for browser compatibility
-import { Buffer } from 'buffer';
-
-// Create process polyfill
-const processPolyfill = {
-  browser: true,
-  env: {},
-  nextTick: (callback) => setTimeout(callback, 0),
-  platform: 'browser',
-  version: '',
-  versions: { node: '' }
-};
-
-// Setup globals
-if (typeof globalThis !== 'undefined') {
-  globalThis.Buffer = Buffer;
-  globalThis.global = globalThis.global || globalThis;
-  globalThis.process = processPolyfill;
-}
+// Simple browser polyfills
+(function() {
+  // Setup Buffer
+  if (typeof window !== 'undefined' && !window.Buffer) {
+    try {
+      const { Buffer } = require('buffer');
+      window.Buffer = Buffer;
+      window.global = window.globalThis || window;
+    } catch (e) {
+      console.warn('Buffer polyfill failed:', e);
+    }
+  }
+})();

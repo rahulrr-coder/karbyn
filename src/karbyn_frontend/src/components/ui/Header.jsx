@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/SimpleAuthContext';
-import { useWeb3Auth } from "@web3auth/modal/react";
+// import { useWeb3Auth } from "@web3auth/modal/react";
 import Icon from '../AppIcon';
 import AuthButton from '../AuthButton';
 import UserStatus from '../UserStatus';
@@ -10,7 +10,8 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { isAuthenticated, logout, loading, principal } = useAuth();
-  const { isConnected: isWeb3Connected } = useWeb3Auth();
+  // const { isConnected: isWeb3Connected } = useWeb3Auth();
+  const isWeb3Connected = false; // Temporarily disabled
   const location = useLocation();
 
   const publicNavigationItems = [
