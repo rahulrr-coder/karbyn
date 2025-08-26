@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/SimpleAuthContext';
+import { useConnect } from "@connect2ic/react";
 import { useWeb3Auth } from "@web3auth/modal/react";
 import Icon from '../AppIcon';
 import AuthButton from '../AuthButton';
@@ -10,6 +11,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { isAuthenticated, logout, loading, principal } = useAuth();
+  const { isConnected: isIIConnected } = useConnect();
   const { isConnected: isWeb3Connected } = useWeb3Auth();
   const location = useLocation();
 
@@ -27,7 +29,7 @@ const Header = () => {
     { label: 'Community', path: '/community', icon: 'Users' }
   ];
 
-  const navigationItems = isAuthenticated || isWeb3Connected 
+  const navigationItems = isAuthenticated || isIIConnected || isWeb3Connected 
     ? authenticatedNavigationItems 
     : publicNavigationItems;
 
@@ -93,7 +95,7 @@ const Header = () => {
               
               {/* Authentication Section */}
               <div className="flex items-center space-x-3 ml-6 pl-6 border-l border-border">
-                {(isAuthenticated || isWeb3Connected) ? (
+                {(isAuthenticated || isIIConnected || isWeb3Connected) ? (
                   <UserStatus />
                 ) : (
                   <AuthButton />
@@ -157,7 +159,7 @@ const Header = () => {
                 {/* Mobile Authentication */}
                 <div className="mt-6 pt-6 border-t border-border">
                   <div className="px-4">
-                    {(isAuthenticated || isWeb3Connected) ? (
+                    {(isAuthenticated || isIIConnected || isWeb3Connected) ? (
                       <div className="space-y-3">
                         <UserStatus />
                         <button

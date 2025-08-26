@@ -13,7 +13,7 @@ const ProjectComments = ({ project }) => {
       id: 1,
       author: {
         name: "Elena Rodriguez",
-        avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
+        avatar: "/assets/avatars/avatar-1.svg",
         role: "Environmental Scientist"
       },
       content: `This project demonstrates excellent methodology and community engagement. The documentation is thorough and the impact measurements align with international standards. I'm particularly impressed with the soil analysis data and the transparent reporting of challenges faced during implementation.`,

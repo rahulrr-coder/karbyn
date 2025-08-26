@@ -89,7 +89,7 @@ const ImpactDashboard = () => {
       type: 'project_submitted',
       user: {
         name: 'Sarah Chen',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150'
+        avatar: '/assets/avatars/avatar-1.svg'
       },
       description: 'Submitted a new reforestation project in Costa Rica',
       timestamp: new Date(Date.now() - 900000),
@@ -103,7 +103,7 @@ const ImpactDashboard = () => {
       type: 'verification_completed',
       user: {
         name: 'Michael Rodriguez',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150'
+        avatar: '/assets/avatars/avatar-2.svg'
       },
       description: 'Completed verification for solar panel installation project',
       timestamp: new Date(Date.now() - 1800000),

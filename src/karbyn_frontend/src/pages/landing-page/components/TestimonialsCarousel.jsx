@@ -13,7 +13,7 @@ const TestimonialsCarousel = () => {
       name: "Sarah Chen",
       role: "Environmental Scientist",
       organization: "Green Future Initiative",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80",
+      avatar: "/assets/avatars/avatar-1.svg",
       content: `Karbyn has revolutionized how we approach carbon offset verification. The community-driven validation process ensures transparency and builds trust in our environmental impact projects.`,
       rating: 5,
       project: "Reforestation Project - Amazon Basin",

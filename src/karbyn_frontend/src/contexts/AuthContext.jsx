@@ -7,7 +7,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { AuthClient } from '@dfinity/auth-client';
-import { KarbynBackendService } from '../services/KarbynBackendService';
+import { KarbynBackendService } from '../services/KarbynBackendService.js';
 
 // ==================== CONTEXT CREATION ====================
 

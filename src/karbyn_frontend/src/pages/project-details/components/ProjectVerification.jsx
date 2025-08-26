@@ -26,7 +26,7 @@ const ProjectVerification = ({ project }) => {
     {
       id: 1,
       name: "Dr. Sarah Chen",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
+      avatar: "/assets/avatars/avatar-1.svg",
       vote: "approve",
       comment: "Excellent documentation and clear evidence of carbon sequestration. The methodology aligns with international standards.",
       timestamp: "2 hours ago",

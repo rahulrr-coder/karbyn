@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './SimpleAuthContext';
-import { KarbynBackendService } from '../services/KarbynBackendService.jsx';
+import { KarbynBackendService } from '../services/KarbynBackendService.js';
 
 const ActivityContext = createContext();
 
@@ -243,6 +243,11 @@ export const ActivityProvider = ({ children }) => {
 
   const calculateStats = async () => {
     try {
+      // Initialize backend service if not already initialized
+      if (!KarbynBackendService.backend) {
+        await KarbynBackendService.initialize();
+      }
+      
       // Get stats from backend
       const backendStats = await KarbynBackendService.getUserActivityStats();
       

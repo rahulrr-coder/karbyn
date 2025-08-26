@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AuthClient } from '@dfinity/auth-client';
 import { createActor } from '../../../declarations/karbyn_backend';
-import { KarbynBackendService } from '../services/KarbynBackendService.jsx';
+import { KarbynBackendService } from '../services/KarbynBackendService.js';
 
 const MultiWalletAuthContext = createContext();
 
