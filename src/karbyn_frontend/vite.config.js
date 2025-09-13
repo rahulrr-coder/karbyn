@@ -63,14 +63,19 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Group related dependencies
+          // Group related dependencies for better caching
           vendor: ['react', 'react-dom'],
-          web3auth: ['@web3auth/modal'],
-          dfinity: ['@dfinity/agent', '@dfinity/auth-client', '@dfinity/candid', '@dfinity/identity', '@dfinity/principal']
+          dfinity: ['@dfinity/agent', '@dfinity/auth-client', '@dfinity/candid', '@dfinity/identity', '@dfinity/principal'],
+          charts: ['recharts'],
+          animations: ['framer-motion'],
+          routing: ['react-router-dom'],
+          forms: ['react-hook-form'],
+          ui: ['lucide-react', 'clsx', 'class-variance-authority']
         },
       },
     },
-    // Try to handle problematic dependencies
+    // Optimize chunk size and splitting
+    chunkSizeWarningLimit: 1000,
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,

@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/SimpleAuthContext';
-import biometricService from '../../services/biometricService';
-import BiometricRegistration from '../verification/BiometricRegistration';
 import { User, Shield, Eye, Calendar, TrendingUp, Download, Upload, Settings } from 'lucide-react';
 
 const UserProfile = () => {
   const { user } = useAuth();
-  const [biometricProfile, setBiometricProfile] = useState(null);
-  const [verificationStats, setVerificationStats] = useState(null);
+  // Removed biometric functionality - using NFID authentication instead
   const [showBiometricSetup, setShowBiometricSetup] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 

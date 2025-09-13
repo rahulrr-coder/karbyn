@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/SimpleAuthContext';
 import { useActivity } from '../../contexts/ActivityContext';
-import EnhancedAIVerification from '../../components/verification/EnhancedAIVerification';
-import biometricService from '../../services/biometricService';
 import ActivityShare from '../../components/social/ActivityShare';
 import ImpactCertificate from '../../components/social/ImpactCertificate';
 
@@ -11,9 +9,6 @@ const SubmitActivity = () => {
   const { submitActivity, activityTypes, loading, stats } = useActivity();
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-  
-  // Get user's biometric profile
-  const userBiometric = user?.walletAddress ? biometricService.getBiometricProfile(user.walletAddress) : null;
   
   const [formData, setFormData] = useState({
     type: 'transport',
@@ -33,7 +28,6 @@ const SubmitActivity = () => {
   const [locationData, setLocationData] = useState(null);
 
   const [step, setStep] = useState(1);
-  const [aiVerificationResult, setAiVerificationResult] = useState(null);
   const [submissionResult, setSubmissionResult] = useState(null);
 
   const handleInputChange = (e) => {
@@ -186,8 +180,7 @@ const SubmitActivity = () => {
       distance: formData.distance ? parseFloat(formData.distance) : null,
       quantity: formData.quantity ? parseInt(formData.quantity) : null,
       duration: formData.duration ? parseFloat(formData.duration) : null,
-      aiVerified: aiVerificationResult ? aiVerificationResult.success : false,
-      aiVerificationData: aiVerificationResult
+      aiVerified: false // Simplified since AI verification is removed
     });
 
     if (result.success) {
@@ -195,7 +188,7 @@ const SubmitActivity = () => {
         ...result.activity,
         carbonOffset: calculatedCarbonOffset.toFixed(1), // Use calculated carbon offset
         calculated_carbon_offset: calculatedCarbonOffset, // Backend format
-        aiVerified: aiVerificationResult ? aiVerificationResult.success : false
+        aiVerified: false // Simplified since AI verification is removed
       });
       setStep(4);
     } else {
@@ -534,19 +527,22 @@ const SubmitActivity = () => {
               </button>
             </div>
             
-            <EnhancedAIVerification 
-              userBiometric={userBiometric}
-              onVerificationComplete={(result) => {
-                // Save verification result to history
-                if (user?.walletAddress) {
-                  biometricService.saveVerificationResult(user.walletAddress, result);
-                }
-                setAiVerificationResult(result);
-                setStep(3);
-              }}
-              activityType={formData.type}
-              preferLiveVerification={true}
-            />
+            {/* AI Verification removed - using NFID authentication instead */}
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
+                <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Identity Verified</h3>
+              <p className="text-muted-foreground mb-4">Your identity is verified through your authenticated IC account.</p>
+              <button 
+                onClick={() => setStep(3)}
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 organic-transition"
+              >
+                Continue to Submission
+              </button>
+            </div>
           </div>
         )}
 
@@ -707,49 +703,16 @@ const SubmitActivity = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
-                  {aiVerificationResult ? (
-                    <div className="ml-4 flex-grow">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-foreground">AI Verification Complete</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full ${aiVerificationResult.isMatch ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                          {aiVerificationResult.isMatch ? 'Identity Verified' : 'Identity Mismatch'}
-                        </span>
-                      </div>
-                      <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-muted-foreground">Face Match:</span>
-                          <span className="ml-1 font-medium">{aiVerificationResult.similarity?.toFixed(1)}%</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Confidence:</span>
-                          <span className="ml-1 font-medium">{aiVerificationResult.confidence?.toFixed(1)}%</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Method:</span>
-                          <span className="ml-1 font-medium">{aiVerificationResult.verificationType === 'live_video' ? 'Live Video' : 'Upload'}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Expression:</span>
-                          <span className="ml-1 font-medium capitalize">{aiVerificationResult.dominantExpression}</span>
-                        </div>
-                      </div>
+                  <div className="ml-4 flex-grow">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-foreground">Identity Verified</h3>
+                      <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        IC Account Verified
+                      </span>
                     </div>
-                  ) : (
-                    <div className="ml-4">
-                      <h3 className="text-sm font-medium text-foreground">Enhance verification with AI</h3>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Complete an AI verification step to speed up approval and increase your trust score.
-                      </p>
-                    </div>
-                  )}
-                  <div className="ml-auto">
-                    <button
-                      type="button"
-                      onClick={() => setStep(3.5)}
-                      className={`px-4 py-2 ${aiVerificationResult ? 'bg-muted text-muted-foreground' : 'bg-accent text-accent-foreground hover:bg-accent/90'} rounded-lg text-sm organic-transition`}
-                    >
-                      {aiVerificationResult ? 'Redo Verification' : 'Start AI Verification'}
-                    </button>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your identity is authenticated through your Internet Computer account.
+                    </p>
                   </div>
                 </div>
               </div>
