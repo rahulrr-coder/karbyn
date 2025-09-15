@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSimpleNFIDAuth } from '../contexts/SimpleNFIDAuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '../utils/safeRouterHooks';
 import { motion } from 'framer-motion';
 import AuthButton from '../components/auth/AuthButton';
 import EnhancedAuthModal from '../components/auth/EnhancedAuthModal';
@@ -8,7 +8,7 @@ import EnhancedAuthModal from '../components/auth/EnhancedAuthModal';
 const LandingPage = () => {
   const { isAuthenticated, user } = useSimpleNFIDAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
 
   useEffect(() => {
     if (isAuthenticated && user) {

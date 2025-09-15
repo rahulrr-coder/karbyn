@@ -3,3 +3,6 @@ members = [
     "src/karbyn_backend"
 ]
 resolver = "2"
+
+[patch.crates-io]
+paste = { git = "https://github.com/dtolnay/paste", branch = "master" }

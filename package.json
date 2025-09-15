@@ -14,5 +14,11 @@
   "type": "module",
   "workspaces": [
     "src/karbyn_frontend"
-  ]
+  ],
+  "devDependencies": {
+    "patch-package": "^8.0.0"
+  },
+  "dependencies": {
+    "@nfid/identitykit": "^1.0.15"
+  }
 }

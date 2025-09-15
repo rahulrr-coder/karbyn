@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSimpleNFIDAuth } from '../../contexts/SimpleNFIDAuthContext';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSafeNavigate } from '../../utils/safeRouterHooks';
 
 const EnhancedAuthModal = ({ isOpen, onClose, defaultMethod = null }) => {
   const {
@@ -18,7 +18,7 @@ const EnhancedAuthModal = ({ isOpen, onClose, defaultMethod = null }) => {
   const [selectedMethod, setSelectedMethod] = useState(defaultMethod);
   const [rememberChoice, setRememberChoice] = useState(false);
   const [connectionStep, setConnectionStep] = useState('selection'); // 'selection', 'connecting', 'success'
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
 
   const availableMethods = getAvailableAuthMethods();
 

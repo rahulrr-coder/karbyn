@@ -91,7 +91,7 @@ export const SimpleAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [actor, setActor] = useState(null);
   const [identity, setIdentity] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start as true during initialization
   const [walletType, setWalletType] = useState(null);
 
   const getProviderUrl = () => {

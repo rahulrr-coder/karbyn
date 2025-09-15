@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './SimpleAuthContext';
-import { KarbynBackendService } from '../services/KarbynBackendService.js';
+import { KarbynBackendService } from '../services/KarbynBackendService.jsx';
 
 const ActivityContext = createContext();
 

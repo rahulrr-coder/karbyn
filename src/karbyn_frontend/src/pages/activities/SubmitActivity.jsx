@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/SimpleAuthContext';
 import { useActivity } from '../../contexts/ActivityContext';
 import ActivityShare from '../../components/social/ActivityShare';
 import ImpactCertificate from '../../components/social/ImpactCertificate';
+import { useSafeNavigate } from '../../utils/safeRouterHooks';
 
 const SubmitActivity = () => {
   const { submitActivity, activityTypes, loading, stats } = useActivity();
   const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
   
   const [formData, setFormData] = useState({
     type: 'transport',

@@ -15,9 +15,8 @@ export const useSimpleNFIDAuth = () => {
 
 export const SimpleNFIDAuthProvider = ({ children }) => {
   // Use NFID React hooks
-  const { user, isConnecting, connect, disconnect } = useAuth();
+  const { user, connect, disconnect } = useAuth();
   const identity = useIdentity();
-  const identityKit = useIdentityKit();
   const isInitializing = useIsInitializing();
   
   // Determine if connected based on user presence
@@ -25,17 +24,13 @@ export const SimpleNFIDAuthProvider = ({ children }) => {
   
   // Local state for our app
   const [actor, setActor] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Create actor when user connects
   useEffect(() => {
     const setupActor = async () => {
-      if (isConnected && identity) {
+      if (user && identity) {
         try {
-          setIsLoading(true);
-          setError(null);
-          
           const canisterId = import.meta.env.VITE_CANISTER_ID_KARBYN_BACKEND || 'uxrrr-q7777-77774-qaaaq-cai';
           const backendActor = createActor(canisterId, {
             agentOptions: {
@@ -49,8 +44,6 @@ export const SimpleNFIDAuthProvider = ({ children }) => {
         } catch (err) {
           console.error('Failed to create actor:', err);
           setError(err.message);
-        } finally {
-          setIsLoading(false);
         }
       } else {
         setActor(null);
@@ -58,7 +51,7 @@ export const SimpleNFIDAuthProvider = ({ children }) => {
     };
 
     setupActor();
-  }, [isConnected, identity]);
+  }, [user, identity]);
 
   // NFID authentication function
   const loginWithNFIDGoogle = async () => {
@@ -133,7 +126,7 @@ export const SimpleNFIDAuthProvider = ({ children }) => {
     actor,
     
     // Loading states
-    isLoading: isLoading || isConnecting || isInitializing,
+    isLoading: isInitializing,
     error,
     
     // Authentication methods

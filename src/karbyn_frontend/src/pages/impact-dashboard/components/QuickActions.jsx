@@ -1,9 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '../../../utils/safeRouterHooks';
 import Button from '../../../components/ui/Button';
 
 const QuickActions = () => {
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
 
   const actions = [
     {

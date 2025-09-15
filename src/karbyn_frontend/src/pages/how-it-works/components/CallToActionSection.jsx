@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '../../../utils/safeRouterHooks';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
 const CallToActionSection = () => {
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
 
   const actions = [
     {

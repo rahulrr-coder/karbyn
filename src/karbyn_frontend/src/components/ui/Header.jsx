@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/SimpleAuthContext';
+import { Link } from 'react-router-dom';
 import Icon from '../AppIcon';
-import AuthButton from '../AuthButton';
-import UserStatus from '../UserStatus';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { isAuthenticated, logout, loading, principal } = useAuth();
-  const location = useLocation();
+  // Temporarily remove auth for testing
+  const isAuthenticated = false; // Mock for now
+  const loading = false;
+  
+  // Remove location dependency completely for now
+  const currentPath = '/'; // Mock current path
 
   const publicNavigationItems = [
     { label: 'Home', path: '/', icon: 'Home' },
@@ -48,9 +49,9 @@ const Header = () => {
 
   const isActivePath = (path) => {
     if (path === '/') {
-      return location.pathname === '/';
+      return currentPath === '/';
     }
-    return location.pathname.startsWith(path);
+    return currentPath.startsWith(path);
   };
 
   return (
@@ -89,13 +90,14 @@ const Header = () => {
                 ))}
               </nav>
               
-              {/* Authentication Section */}
+              {/* Authentication Section - Temporarily disabled */}
               <div className="flex items-center space-x-3 ml-6 pl-6 border-l border-border">
-                {isAuthenticated ? (
-                  <UserStatus />
-                ) : (
-                  <AuthButton />
-                )}
+                <Link 
+                  to="/login" 
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                >
+                  Login
+                </Link>
               </div>
             </div>
 
@@ -152,29 +154,17 @@ const Header = () => {
                   </Link>
                 ))}
 
-                {/* Mobile Authentication */}
+                {/* Mobile Authentication - Temporarily simplified */}
                 <div className="mt-6 pt-6 border-t border-border">
                   <div className="px-4">
-                    {isAuthenticated ? (
-                      <div className="space-y-3">
-                        <UserStatus />
-                        <button
-                          onClick={() => {
-                            logout();
-                            closeMobileMenu();
-                          }}
-                          className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-base font-medium text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
-                        >
-                          <Icon name="LogOut" size={20} />
-                          <span>Sign Out</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <AuthButton className="w-full justify-center" size="lg">
-                        <Icon name="Shield" size={20} />
-                        <span>Sign In</span>
-                      </AuthButton>
-                    )}
+                    <Link 
+                      to="/login" 
+                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Icon name="Shield" size={20} />
+                      <span>Sign In</span>
+                    </Link>
                   </div>
                 </div>
               </nav>

@@ -42,6 +42,11 @@ const WalletManager = {
     return typeof window !== 'undefined' && window.ic && window.ic.stoic;
   },
 
+  // Check if MetaMask is available
+  isMetaMaskAvailable: () => {
+    return typeof window !== 'undefined' && window.ethereum;
+  },
+
   // Connect to Plug wallet with improved error handling
   connectPlug: async (canisterId) => {
     if (!WalletManager.isPlugAvailable()) {
@@ -50,9 +55,8 @@ const WalletManager = {
 
     try {
       // For local development, we need to use the local host
-      const isLocal = window.location.hostname === 'localhost' || 
-                     window.location.hostname.includes('localhost') ||
-                     window.location.hostname === '127.0.0.1';
+      const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+      const isLocal = hostname === 'localhost' || hostname.includes('localhost') || hostname === '127.0.0.1';
       
       const host = isLocal ? 'http://localhost:4943' : 'https://ic0.app';
       
@@ -160,6 +164,34 @@ const WalletManager = {
       };
     } catch (error) {
       console.error('Stoic connection error:', error);
+      throw error;
+    }
+  },
+
+  // Connect to MetaMask wallet
+  connectMetaMask: async () => {
+    if (!WalletManager.isMetaMaskAvailable()) {
+      throw new Error('MetaMask not found. Please install MetaMask extension.');
+    }
+
+    try {
+      // Request account access
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      
+      if (!accounts || accounts.length === 0) {
+        throw new Error('MetaMask connection denied');
+      }
+
+      const account = accounts[0];
+
+      console.log('MetaMask wallet connected:', account);
+
+      return {
+        account: account,
+        type: 'metamask'
+      };
+    } catch (error) {
+      console.error('MetaMask connection error:', error);
       throw error;
     }
   }
@@ -489,6 +521,9 @@ export const MultiWalletAuthProvider = ({ children }) => {
         case 'stoic':
           result = await loginWithStoic(rememberChoice);
           break;
+        case 'metamask':
+          result = await loginWithMetaMask(rememberChoice);
+          break;
         case 'internet-identity':
         default:
           result = await loginWithInternetIdentity(rememberChoice);
@@ -558,6 +593,22 @@ export const MultiWalletAuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Stoic login failed:', error);
       throw new Error('Failed to connect with Stoic wallet. Please make sure Stoic is available and try again.');
+    }
+  };
+
+  const loginWithMetaMask = async (rememberChoice = false) => {
+    try {
+      const metaMaskConnection = await WalletManager.connectMetaMask();
+      
+      // Only save wallet type if user wants to remember
+      if (rememberChoice) {
+        localStorage.setItem('karbyn_wallet_type', 'metamask');
+      }
+      await initializeWithCustomAgent(metaMaskConnection.agent, metaMaskConnection.principal, 'metamask');
+      return true;
+    } catch (error) {
+      console.error('MetaMask login failed:', error);
+      throw new Error('Failed to connect with MetaMask wallet. Please make sure MetaMask is available and try again.');
     }
   };
 
@@ -639,6 +690,17 @@ export const MultiWalletAuthProvider = ({ children }) => {
           await window.ic.stoic.disconnect();
         } catch (error) {
           console.warn('Stoic disconnect failed:', error);
+        }
+      } else if (walletType === 'metamask' && WalletManager.isMetaMaskAvailable()) {
+        try {
+          // MetaMask does not have a disconnect method, but we can clear the account
+          setUser(null);
+          setIdentity(null);
+          setActor(null);
+          setIsAuthenticated(false);
+          console.log('MetaMask disconnected');
+        } catch (error) {
+          console.warn('MetaMask disconnect error:', error);
         }
       }
       
@@ -761,6 +823,7 @@ export const MultiWalletAuthProvider = ({ children }) => {
   const availableWallets = ['ii']; // Internet Identity is always available
   if (WalletManager.isPlugAvailable()) availableWallets.push('plug');
   if (WalletManager.isStoicAvailable()) availableWallets.push('stoic');
+  if (WalletManager.isMetaMaskAvailable()) availableWallets.push('metamask');
 
   const value = {
     isAuthenticated,
@@ -778,6 +841,7 @@ export const MultiWalletAuthProvider = ({ children }) => {
     loginWithWallet,
     loginWithPlug,
     loginWithStoic,
+    loginWithMetaMask,
     loginWithInternetIdentity,
     
     // Legacy methods for backward compatibility
@@ -795,6 +859,7 @@ export const MultiWalletAuthProvider = ({ children }) => {
     walletManager: WalletManager,
     isPlugAvailable: WalletManager.isPlugAvailable(),
     isStoicAvailable: WalletManager.isStoicAvailable(),
+    isMetaMaskAvailable: WalletManager.isMetaMaskAvailable(),
   };
 
   return (

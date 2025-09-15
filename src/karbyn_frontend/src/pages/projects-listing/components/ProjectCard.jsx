@@ -1,11 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '../../../utils/safeRouterHooks';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
 
 const ProjectCard = ({ project, viewMode = 'grid' }) => {
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate();
 
   const handleViewDetails = () => {
     navigate('/project-details', { state: { project } });
