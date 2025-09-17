@@ -1,20 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { useSimpleNFIDAuth } from '../contexts/SimpleNFIDAuthContext';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { useAuth } from '../contexts/CleanAuthContext';
 import { useSafeNavigate } from '../utils/safeRouterHooks';
-import { motion } from 'framer-motion';
-import AuthButton from '../components/auth/AuthButton';
-import EnhancedAuthModal from '../components/auth/EnhancedAuthModal';
+import LoginButton from '../components/LoginButton';
+
+// Lazy load motion for animations
+const motion = lazy(() => import('framer-motion').then(module => ({ default: module.motion })));
+
+// Simple fallback component without animations
+const StaticDiv = ({ children, className, ...props }) => (
+  <div className={className} {...props}>{children}</div>
+);
+
+const StaticButton = ({ children, className, ...props }) => (
+  <button className={className} {...props}>{children}</button>
+);
 
 const LandingPage = () => {
-  const { isAuthenticated, user } = useSimpleNFIDAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { isAuthenticated, principal } = useAuth();
   const navigate = useSafeNavigate();
+  const [MotionComponent, setMotionComponent] = useState(null);
 
   useEffect(() => {
-    if (isAuthenticated && user) {
+    // Load motion component asynchronously
+    import('framer-motion').then(module => {
+      setMotionComponent(() => module.motion);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && principal) {
       navigate('/dashboard');
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, principal, navigate]);
+
+  // Use motion component if loaded, otherwise use static components
+  const MotionDiv = MotionComponent?.div || StaticDiv;
+  const MotionButton = MotionComponent?.button || StaticButton;
 
   const features = [
     {
@@ -72,14 +93,14 @@ const LandingPage = () => {
             <span className="text-xl font-bold text-gray-900">Karbyn</span>
           </div>
           
-          <AuthButton variant="primary" showDropdown={true} />
+          <LoginButton className="text-lg" />
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="container mx-auto px-6 py-20">
         <div className="text-center max-w-4xl mx-auto">
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -95,23 +116,17 @@ const LandingPage = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowAuthModal(true)}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-xl text-lg transition-colors shadow-lg"
-              >
+              <LoginButton>
                 🌱 Get Started Now
-              </motion.button>
+              </LoginButton>
               
-              <motion.button
+              <MotionButton
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setShowAuthModal(true)}
                 className="border-2 border-green-600 text-green-600 hover:bg-green-50 font-semibold py-4 px-8 rounded-xl text-lg transition-colors"
               >
-                � Learn More
-              </motion.button>
+                📖 Learn More
+              </MotionButton>
             </div>
 
             <div className="mt-8 flex items-center justify-center space-x-8 text-sm text-gray-500">
@@ -134,7 +149,7 @@ const LandingPage = () => {
                 <span>Instant access</span>
               </div>
             </div>
-          </motion.div>
+          </MotionDiv>
         </div>
       </section>
 
@@ -152,7 +167,7 @@ const LandingPage = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <motion.div
+              <MotionDiv
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -162,7 +177,7 @@ const LandingPage = () => {
                 <div className="text-4xl mb-4">{feature.icon}</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">{feature.title}</h3>
                 <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-              </motion.div>
+              </MotionDiv>
             ))}
           </div>
         </div>
@@ -182,7 +197,7 @@ const LandingPage = () => {
 
           <div className="grid lg:grid-cols-3 gap-8">
             {userTypes.map((type, index) => (
-              <motion.div
+              <MotionDiv
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -203,7 +218,7 @@ const LandingPage = () => {
                     </div>
                   ))}
                 </div>
-              </motion.div>
+              </MotionDiv>
             ))}
           </div>
         </div>
@@ -212,7 +227,8 @@ const LandingPage = () => {
       {/* CTA Section */}
       <section className="py-20 bg-gray-900">
         <div className="container mx-auto px-6 text-center">
-          <motion.div
+                  <div className="container mx-auto px-6 text-center">
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
@@ -225,15 +241,16 @@ const LandingPage = () => {
               start earning carbon credits today.
             </p>
             
-            <motion.button
+            <MotionButton
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowAuthModal(true)}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-8 rounded-xl text-lg transition-colors shadow-lg"
             >
               🔍 Get Started with Google
-            </motion.button>
-          </motion.div>
+            </MotionButton>
+          </MotionDiv>
+        </div>
         </div>
       </section>
 
@@ -253,12 +270,6 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
-
-      {/* Auth Modal */}
-      <EnhancedAuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-      />
     </div>
   );
 };

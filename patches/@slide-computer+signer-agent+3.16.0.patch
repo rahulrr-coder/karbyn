@@ -1,0 +1,31 @@
+diff --git a/node_modules/@nfid/identitykit/node_modules/@slide-computer/signer-agent/lib/esm/agent.js b/node_modules/@nfid/identitykit/node_modules/@slide-computer/signer-agent/lib/esm/agent.js
+index 8d7a1f2..2e5b1bb 100644
+--- a/node_modules/@nfid/identitykit/node_modules/@slide-computer/signer-agent/lib/esm/agent.js
++++ b/node_modules/@nfid/identitykit/node_modules/@slide-computer/signer-agent/lib/esm/agent.js
+@@ -1,7 +1,8 @@
+ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+@@
+-var _SignerAgent_instances, _a, _SignerAgent_isInternalConstructing, _SignerAgent_options, _SignerAgent_certificates, _SignerAgent_queue, _SignerAgent_executeTimeout, _SignerAgent_scheduled, _SignerAgent_autoBatch, _SignerAgent_validation, _SignerAgent_executeQueue, _SignerAgent_executeBatch;
+-import { Certificate, compare, HttpAgent, IC_ROOT_KEY, lookupResultToBuffer, LookupStatus, requestIdOf, SubmitRequestType, } from "@dfinity/agent";
++var _SignerAgent_instances, _a, _SignerAgent_isInternalConstructing, _SignerAgent_options, _SignerAgent_certificates, _SignerAgent_queue, _SignerAgent_executeTimeout, _SignerAgent_scheduled, _SignerAgent_autoBatch, _SignerAgent_validation, _SignerAgent_executeQueue, _SignerAgent_executeBatch;
++import { Certificate, HttpAgent, IC_ROOT_KEY, lookupResultToBuffer, LookupStatus, requestIdOf, SubmitRequestType, } from "@dfinity/agent";
++import { compare } from "@dfinity/candid";
+ import { lebDecode, PipeArrayBuffer } from "@dfinity/candid";
+ import { Principal } from "@dfinity/principal";
+ import { toBase64 } from "@slide-computer/signer";
+@@ -59,7 +60,7 @@ export class SignerAgent {
+         const contentMapMatchesRequest = SubmitRequestType.Call === requestBody.request_type &&
+             canisterId.compareTo(requestBody.canister_id) === "eq" &&
+             options.methodName === requestBody.method_name &&
+-            compare(options.arg, requestBody.arg) === 0 &&
++            compare(options.arg, requestBody.arg) === 0 &&
+             __classPrivateFieldGet(this, _SignerAgent_options, "f").account.compareTo(Principal.from(requestBody.sender)) ===
+                 "eq";
+         if (!contentMapMatchesRequest) {
+@@ -146,7 +147,7 @@ export class SignerAgent {
+         const status = certificate.lookup([
+             "request_status",
+             submitResponse.requestId,
+             "status",
+         ]);
+*** End Patch

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import Routes from "./Routes";
-import SignInModal from "./components/SignInModal";
+import LoginButton from "./components/LoginButton";
 
 class GlobalErrorBoundary extends React.Component {
   constructor(props) {
@@ -34,23 +34,12 @@ class GlobalErrorBoundary extends React.Component {
 }
 
 function App() {
-  const [isModalOpen, setModalOpen] = useState(false);
-
-  const handleSignInClick = () => {
-    setModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setModalOpen(false);
-  };
-
   return (
     <GlobalErrorBoundary>
       <div>
         <header>
-          <button onClick={handleSignInClick}>Sign In</button>
+          <LoginButton />
         </header>
-        {isModalOpen && <SignInModal onClose={handleCloseModal} />}
         <Routes />
       </div>
     </GlobalErrorBoundary>

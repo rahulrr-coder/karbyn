@@ -183,8 +183,7 @@ pub fn get_leaderboard(limit: u32) -> Vec<LeaderboardEntry> {
             let portfolio = get_user_portfolio_by_principal(principal);
             
             // Get username from user profile
-            let username = user::get_public_user_profile(principal)
-                .map(|profile| profile.name);
+            let username = user::get_public_user_profile(principal.clone());
             
             entries.push(LeaderboardEntry {
                 principal,

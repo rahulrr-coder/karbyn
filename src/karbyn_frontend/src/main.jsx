@@ -2,8 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { MultiWalletAuthProvider } from './contexts/MultiWalletAuthContext';
-import { SimpleNFIDAuthProvider } from './contexts/SimpleNFIDAuthContext';
+import { AuthProvider } from './contexts/CleanAuthContext';
 import "./styles/tailwind.css";
 import "./styles/index.css";
 
@@ -13,11 +12,9 @@ const root = createRoot(container);
 root.render(
   <React.StrictMode>
     <BrowserRouter>
-      <MultiWalletAuthProvider>
-        <SimpleNFIDAuthProvider>
-          <App />
-        </SimpleNFIDAuthProvider>
-      </MultiWalletAuthProvider>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>
 );

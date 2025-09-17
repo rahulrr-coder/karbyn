@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../AppIcon';
+import LoginButton from '../LoginButton';
+import { useAuth } from '../../contexts/CleanAuthContext';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  // Temporarily remove auth for testing
-  const isAuthenticated = false; // Mock for now
-  const loading = false;
+  const { isAuthenticated, isLoading } = useAuth();
   
   // Remove location dependency completely for now
   const currentPath = '/'; // Mock current path
@@ -90,14 +90,9 @@ const Header = () => {
                 ))}
               </nav>
               
-              {/* Authentication Section - Temporarily disabled */}
+              {/* Authentication Section */}
               <div className="flex items-center space-x-3 ml-6 pl-6 border-l border-border">
-                <Link 
-                  to="/login" 
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  Login
-                </Link>
+                <LoginButton className="px-4 py-2 text-sm" />
               </div>
             </div>
 
@@ -154,17 +149,10 @@ const Header = () => {
                   </Link>
                 ))}
 
-                {/* Mobile Authentication - Temporarily simplified */}
+                {/* Mobile Authentication - Using LoginButton */}
                 <div className="mt-6 pt-6 border-t border-border">
                   <div className="px-4">
-                    <Link 
-                      to="/login" 
-                      className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Icon name="Shield" size={20} />
-                      <span>Sign In</span>
-                    </Link>
+                    <LoginButton className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-base font-medium" />
                   </div>
                 </div>
               </nav>
