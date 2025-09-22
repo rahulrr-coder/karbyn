@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../AppIcon';
 import LoginButton from '../LoginButton';
+import ProfileDropdown from '../ProfileDropdown';
 import { useAuth } from '../../contexts/CleanAuthContext';
 
-const Header = () => {
+const Header = ({ onRegisterAsNGO }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
@@ -92,7 +93,11 @@ const Header = () => {
               
               {/* Authentication Section */}
               <div className="flex items-center space-x-3 ml-6 pl-6 border-l border-border">
-                <LoginButton className="px-4 py-2 text-sm" />
+                {isAuthenticated ? (
+                  <ProfileDropdown onRegisterAsNGO={onRegisterAsNGO} />
+                ) : (
+                  <LoginButton className="px-4 py-2 text-sm" />
+                )}
               </div>
             </div>
 
@@ -149,10 +154,14 @@ const Header = () => {
                   </Link>
                 ))}
 
-                {/* Mobile Authentication - Using LoginButton */}
+                {/* Mobile Authentication */}
                 <div className="mt-6 pt-6 border-t border-border">
                   <div className="px-4">
-                    <LoginButton className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-base font-medium" />
+                    {isAuthenticated ? (
+                      <ProfileDropdown onRegisterAsNGO={onRegisterAsNGO} />
+                    ) : (
+                      <LoginButton className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg text-base font-medium" />
+                    )}
                   </div>
                 </div>
               </nav>

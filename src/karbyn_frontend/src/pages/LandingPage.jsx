@@ -29,9 +29,22 @@ const LandingPage = () => {
 
   useEffect(() => {
     if (isAuthenticated && principal) {
+      console.log('User is authenticated, redirecting to dashboard');
       navigate('/dashboard');
     }
   }, [isAuthenticated, principal, navigate]);
+
+  // If user is authenticated, don't render the landing page at all
+  if (isAuthenticated && principal) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Use motion component if loaded, otherwise use static components
   const MotionDiv = MotionComponent?.div || StaticDiv;

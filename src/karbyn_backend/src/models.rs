@@ -67,3 +67,60 @@ pub struct AuthResponse {
 }
 
 pub type UserStorage = HashMap<String, UserProfile>;
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct NGOProfile {
+    pub id: String,
+    pub name: String,
+    pub contact: String,
+    pub location: String,
+    pub organization_type: String,
+    pub created_at: u64,
+    pub verified: bool,
+}
+
+impl NGOProfile {
+    pub fn new(name: String, contact: String, location: String, organization_type: String) -> Self {
+        let timestamp = ic_cdk::api::time();
+        Self {
+            id: format!("ngo:{}", name.to_lowercase()),
+            name,
+            contact,
+            location,
+            organization_type,
+            created_at: timestamp,
+            verified: false,
+        }
+    }
+}
+
+#[derive(CandidType, Deserialize, Serialize, Clone, Debug)]
+pub struct Claim {
+    pub id: String,
+    pub user_id: String,
+    pub species: String,
+    pub quantity: u32,
+    pub location: String,
+    pub image_hash: String,
+    pub co2_offset: f64,
+    pub created_at: u64,
+    pub status: String, // Pending, Approved, Rejected
+}
+
+impl Claim {
+    pub fn new(user_id: String, species: String, quantity: u32, location: String, image_hash: String) -> Self {
+        let timestamp = ic_cdk::api::time();
+        let co2_offset = 0.0; // Placeholder for calculation logic
+        Self {
+            id: format!("claim:{}:{}", user_id, timestamp),
+            user_id,
+            species,
+            quantity,
+            location,
+            image_hash,
+            co2_offset,
+            created_at: timestamp,
+            status: "Pending".to_string(),
+        }
+    }
+}

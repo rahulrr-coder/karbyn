@@ -1,20 +1,23 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
 const SuccessModal = ({ isOpen, onClose, projectId }) => {
+  const navigate = useNavigate();
+  
   if (!isOpen) return null;
 
   const handleViewDashboard = () => {
     onClose();
-    // Navigate to main dashboard
-    window.location.href = '/dashboard';
+    // Use React Router navigate instead of window.location
+    navigate('/dashboard');
   };
 
   const handleViewProjects = () => {
     onClose();
-    // Navigate to projects listing - in a real app, this would use router
-    window.location.href = '/projects-listing';
+    // Use React Router navigate instead of window.location
+    navigate('/projects-listing');
   };
 
   return (

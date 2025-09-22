@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/CleanAuthContext';
 import Header from '../../components/ui/Header';
 import Footer from '../../components/ui/Footer';
 import Breadcrumb from '../../components/ui/Breadcrumb';
@@ -16,6 +17,7 @@ import TestDataLoader from './components/TestDataLoader';
 // import { submitProject } from '../../api/projectApi'; // Commented out for MVP demo
 
 const SubmitProject = () => {
+  const { principal } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -39,7 +41,11 @@ const SubmitProject = () => {
       description: '',
       carbonImpact: '',
       latitude: '',
-      longitude: ''
+      longitude: '',
+      // Tree-specific fields
+      treeSpecies: '',
+      treeCount: '',
+      projectArea: ''
     },
     impact: {
       standard: '',
@@ -253,6 +259,28 @@ const SubmitProject = () => {
       // Generate a mock project ID
       const mockProjectId = `PRJ-${Date.now().toString().slice(-6)}`;
       setSubmittedProjectId(mockProjectId);
+      
+      // Save submitted project to localStorage for dashboard display
+      const submittedProject = {
+        id: mockProjectId,
+        name: formData.basics.name,
+        type: formData.basics.type,
+        carbonImpact: formData.basics.carbonImpact,
+        location: formData.basics.location,
+        status: 'pending', // pending, verified, rejected
+        submittedAt: new Date().toISOString(),
+        treeSpecies: formData.basics.treeSpecies,
+        treeCount: formData.basics.treeCount,
+        projectArea: formData.basics.projectArea
+      };
+      
+      // Get current user's principal
+      if (principal) {
+        const storageKey = `karbyn-submitted-projects-${principal.toString()}`;
+        const existingProjects = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        existingProjects.push(submittedProject);
+        localStorage.setItem(storageKey, JSON.stringify(existingProjects));
+      }
       
       // Clear saved draft
       localStorage.removeItem('karbyn-project-draft');

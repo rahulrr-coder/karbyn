@@ -117,6 +117,41 @@ const ProjectBasicsForm = ({ formData, updateFormData, errors }) => {
           required
           description="Annual carbon dioxide equivalent reduction/sequestration"
         />
+
+        {/* Tree-specific fields for reforestation projects */}
+        {formData.basics.type === 'reforestation' && (
+          <>
+            <Input
+              label="Tree Species"
+              type="text"
+              placeholder="e.g., Brazilian Cherry, Mahogany, Mixed Native Species"
+              value={formData.basics.treeSpecies || ''}
+              onChange={(e) => handleInputChange('treeSpecies', e.target.value)}
+              error={errors.treeSpecies}
+              description="Primary tree species being planted (free text)"
+            />
+
+            <Input
+              label="Number of Trees"
+              type="number"
+              placeholder="e.g., 10000"
+              value={formData.basics.treeCount || ''}
+              onChange={(e) => handleInputChange('treeCount', e.target.value)}
+              error={errors.treeCount}
+              description="Total number of trees planned for planting"
+            />
+
+            <Input
+              label="Project Area (hectares)"
+              type="number"
+              placeholder="e.g., 500"
+              value={formData.basics.projectArea || ''}
+              onChange={(e) => handleInputChange('projectArea', e.target.value)}
+              error={errors.projectArea}
+              description="Total area covered by the reforestation project"
+            />
+          </>
+        )}
         
         {/* Coordinates are now handled by the LocationSelector component */}
       </div>

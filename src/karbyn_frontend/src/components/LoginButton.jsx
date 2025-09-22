@@ -48,23 +48,14 @@ const LoginButton = ({ className = '', children = 'Login' }) => {
 
   if (isAuthenticated && principal) {
     return (
-      <div className="flex items-center space-x-2">
-        <div className="flex items-center space-x-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
-          <span className="text-lg">{getWalletIcon(walletType)}</span>
-          <div className="text-sm">
-            <div className="font-medium text-green-800">Connected</div>
-            <div className="text-green-600 text-xs">
-              {principal.toText().slice(0, 8)}...{principal.toText().slice(-8)}
-            </div>
+      <div className="flex items-center space-x-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+        <span className="text-lg">{getWalletIcon(walletType)}</span>
+        <div className="text-sm">
+          <div className="font-medium text-green-800">Connected</div>
+          <div className="text-green-600 text-xs">
+            {principal.toText().slice(0, 8)}...{principal.toText().slice(-8)}
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          disabled={isLoading}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {isLoading ? 'Disconnecting...' : 'Disconnect'}
-        </button>
       </div>
     );
   }
